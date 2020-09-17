@@ -1,19 +1,23 @@
 #include "mainwindow.h"
-#include "downloader.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , m_ui(new Ui::MainWindow)
-{
-    m_ui->setupUi(this);
 
-    Downloader *downloader = new Downloader();
-    downloader->data( m_ui->PathEdit->text() );
+MainWindow::MainWindow( QWidget *parent )
+    : QMainWindow( parent )
+    , m_ui( new Ui::MainWindow )
+{
+    m_ui->setupUi( this );
+    m_downloader = new Downloader();
+    connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
 }
 
 MainWindow::~MainWindow()
 {
     delete m_ui;
+    delete m_downloader;
 }
 
+void MainWindow::onDownload()
+{
+    m_downloader->data( m_ui->PathEdit->text() );
+}
