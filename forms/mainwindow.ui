@@ -14,41 +14,52 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLineEdit" name="PathEdit">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>60</y>
-      <width>271</width>
-      <height>21</height>
+      <x>20</x>
+      <y>10</y>
+      <width>751</width>
+      <height>90</height>
      </rect>
     </property>
-   </widget>
-   <widget class="QLabel" name="PathLabel">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>30</y>
-      <width>231</width>
-      <height>20</height>
-     </rect>
+    <property name="title">
+     <string/>
     </property>
-    <property name="text">
-     <string>Link to the file you want to download</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="downloadButton">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>56</y>
-      <width>112</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Download</string>
-    </property>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="PathLabel">
+         <property name="text">
+          <string>Link to the file you want to download</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLineEdit" name="PathEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="downloadButton">
+           <property name="text">
+            <string>Download</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

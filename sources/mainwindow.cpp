@@ -19,5 +19,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::onDownload()
 {
-    m_downloader->data( m_ui->PathEdit->text() );
+    QUrl url = QUrl::fromEncoded(m_ui->PathEdit->text().toLocal8Bit());
+    m_downloader->doDownload( url );
 }
