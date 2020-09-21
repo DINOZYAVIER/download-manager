@@ -15,6 +15,7 @@ public:
     static QString saveFileName( const QUrl &url );
     bool saveToDisk( const QString &filename, QIODevice *data );
     static bool isHttpRedirect( QNetworkReply *reply );
+    int currentDownloads () { return m_currentDownloads.size(); }
 
 public Q_SLOTS:
     //void execute();
@@ -22,7 +23,7 @@ public Q_SLOTS:
     void sslErrors(const QList<QSslError> &errors);
 private:
     QNetworkAccessManager *m_manager;
-    QVector<QNetworkReply *> currentDownloads;
+    QVector<QNetworkReply *> m_currentDownloads;
 };
 
 #endif // DOWNLOADER_H

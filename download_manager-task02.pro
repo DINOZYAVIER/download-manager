@@ -29,11 +29,13 @@ INCLUDEPATH += \
 
 SOURCES += \
     sources/downloader.cpp \
+    sources/downloadtablemodel.cpp \
     sources/main.cpp \
     sources/mainwindow.cpp
 
 HEADERS += \
     sources/downloader.h \
+    sources/downloadtablemodel.h \
     sources/mainwindow.h \
     sources/precompiled.h
 

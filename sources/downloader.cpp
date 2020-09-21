@@ -23,7 +23,7 @@ void Downloader::doDownload(const QUrl &url)
             this, &Downloader::sslErrors);
 #endif
 
-    currentDownloads.append(reply);
+    m_currentDownloads.append(reply);
 }
 
 QString Downloader::saveFileName(const QUrl &url)
@@ -112,10 +112,10 @@ void Downloader::downloadFinished(QNetworkReply *reply)
         }
     }
 
-    currentDownloads.removeAll(reply);
+    m_currentDownloads.removeAll(reply);
     reply->deleteLater();
 
-    if (currentDownloads.isEmpty()) {
+    if (m_currentDownloads.isEmpty()) {
         // all downloads finished
         qDebug() << "All downloads finished";
         //QCoreApplication::instance()->quit();

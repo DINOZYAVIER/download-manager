@@ -2,7 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <downloader.h>
+#include "downloader.h"
+#include <downloadtablemodel.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,5 +23,6 @@ private Q_SLOTS:
 private:
     Ui::MainWindow *m_ui;
     Downloader *m_downloader;
+    DownloadTableModel* m_downloadModel;
 };
 #endif // MAINWINDOW_H

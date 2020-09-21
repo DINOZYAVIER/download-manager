@@ -10,6 +10,9 @@ MainWindow::MainWindow( QWidget *parent )
     m_ui->setupUi( this );
     m_downloader = new Downloader();
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
+
+    m_downloadModel = new DownloadTableModel( m_downloader );
+    m_ui->tableView->setModel( m_downloadModel );
 }
 
 MainWindow::~MainWindow()
