@@ -22,6 +22,8 @@ VERSION = $$BUILD_VERSION
 LIBS += -L/usr/local/opt/openssl@1.1/lib
 
 # Add include path (simplify include in the source files)
+PRECOMPILED_HEADER = precompiled.h
+
 INCLUDEPATH += \
     $$PWD/sources/
 
