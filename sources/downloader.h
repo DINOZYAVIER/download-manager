@@ -3,13 +3,6 @@
 
 #include <QObject>
 #include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QFile>
-#include <QFileInfo>
-#include <QUrl>
-#include <QDebug>
-#include <QCoreApplication>
 
 class Downloader : public QObject
 {

@@ -1,3 +1,4 @@
+#include "precompiled.h"
 #include "downloader.h"
 
 Downloader::Downloader( QObject *parent ) :

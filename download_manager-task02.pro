@@ -32,7 +32,8 @@ SOURCES += \
 
 HEADERS += \
     sources/downloader.h \
-    sources/mainwindow.h
+    sources/mainwindow.h \
+    sources/precompiled.h
 
 FORMS += \
     forms/mainwindow.ui \
