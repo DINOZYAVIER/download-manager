@@ -22,7 +22,6 @@ private Q_SLOTS:
 
 private:
     Ui::MainWindow *m_ui;
-    DownloadTableModel* m_downloadTableModel;
-    Downloader *m_downloader;
+    DownloadTableModel *m_downloadTableModel;
 };
 #endif // MAINWINDOW_H

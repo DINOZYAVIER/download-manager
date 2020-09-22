@@ -17,8 +17,6 @@ public:
     bool saveToDisk( const QString &filename, QIODevice *data );
     static bool isHttpRedirect( QNetworkReply *reply );
     int currentDownloads () { return m_currentDownloads.size(); }
-Q_SIGNALS:
-    //void newDownloadSignal();
 public Q_SLOTS:
     //void execute();
     void downloadFinished(QNetworkReply *reply);
