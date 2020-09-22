@@ -3,12 +3,13 @@
 
 #include <QObject>
 #include <QNetworkAccessManager>
+#include "downloadtablemodel.h"
 
 class Downloader : public QObject
 {
     Q_OBJECT
 public:
-    explicit Downloader(QObject *parent = 0);
+    explicit Downloader( QObject *parent = nullptr );
     ~Downloader();
 
     void doDownload( const QUrl &url );
@@ -16,7 +17,8 @@ public:
     bool saveToDisk( const QString &filename, QIODevice *data );
     static bool isHttpRedirect( QNetworkReply *reply );
     int currentDownloads () { return m_currentDownloads.size(); }
-
+Q_SIGNALS:
+    //void newDownloadSignal();
 public Q_SLOTS:
     //void execute();
     void downloadFinished(QNetworkReply *reply);

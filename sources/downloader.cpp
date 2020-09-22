@@ -24,6 +24,7 @@ void Downloader::doDownload(const QUrl &url)
 #endif
 
     m_currentDownloads.append(reply);
+    //Q_EMIT DownloadTableModel::newDownloadSignal();
 }
 
 QString Downloader::saveFileName(const QUrl &url)

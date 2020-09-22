@@ -14,7 +14,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow( QWidget *parent = nullptr );
+    MainWindow( QWidget *parent = nullptr, Downloader *downloader = nullptr );
     ~MainWindow();
 
 private Q_SLOTS:
@@ -22,7 +22,7 @@ private Q_SLOTS:
 
 private:
     Ui::MainWindow *m_ui;
+    DownloadTableModel* m_downloadTableModel;
     Downloader *m_downloader;
-    DownloadTableModel* m_downloadModel;
 };
 #endif // MAINWINDOW_H

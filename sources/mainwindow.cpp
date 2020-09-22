@@ -3,26 +3,26 @@
 #include "ui_mainwindow.h"
 
 
-MainWindow::MainWindow( QWidget *parent )
+MainWindow::MainWindow( QWidget *parent, Downloader *downloader )
     : QMainWindow( parent )
     , m_ui( new Ui::MainWindow )
+    , m_downloader( downloader )
 {
     m_ui->setupUi( this );
-    m_downloader = new Downloader();
-    connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
+    m_downloadTableModel = new DownloadTableModel();
+    //m_ui->tableView->setModel( m_downloadTableModel );
 
-    m_downloadModel = new DownloadTableModel( m_downloader );
-    m_ui->tableView->setModel( m_downloadModel );
+    connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
 }
 
 MainWindow::~MainWindow()
 {
     delete m_ui;
-    delete m_downloader;
+    delete m_downloadTableModel;
 }
 
 void MainWindow::onDownload()
 {
     QUrl url = QUrl::fromEncoded(m_ui->PathEdit->text().toLocal8Bit());
-    m_downloader->doDownload( url );
+
 }

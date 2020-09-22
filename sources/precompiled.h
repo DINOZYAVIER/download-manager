@@ -12,6 +12,7 @@
 #include <QUrl>
 #include <QDebug>
 #include <QCoreApplication>
+#include <QHeaderView>
 #endif
 
 #endif // PRECOMPILED_H
