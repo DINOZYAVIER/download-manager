@@ -7,7 +7,6 @@ MainWindow::MainWindow( QWidget *parent )
     , m_ui( new Ui::MainWindow )
 
 {
-    qDebug() << QThread::idealThreadCount();
     m_ui->setupUi( this );
     m_downloadTableModel = new DownloadTableModel();
     m_downloader = new Downloader();

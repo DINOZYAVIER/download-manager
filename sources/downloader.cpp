@@ -20,19 +20,19 @@ void Downloader::doDownload()
     QNetworkReply *reply = m_manager->get( request );
 
 #if QT_CONFIG(ssl)
-    connect(reply, &QNetworkReply::sslErrors,
-            this, &Downloader::sslErrors);
+    connect( reply, &QNetworkReply::sslErrors,
+            this, &Downloader::sslErrors );
 #endif
 
-    m_currentDownloads.append(reply);
+    m_currentDownloads.append( reply );
 }
 
-QString Downloader::saveFileName(const QUrl &url)
+QString Downloader::saveFileName( const QUrl &url )
 {
     QString path = url.path();
-    QString basename = QFileInfo(path).fileName();
+    QString basename = QFileInfo( path ).fileName();
 
-    if (basename.isEmpty())
+    if ( basename.isEmpty() )
         basename = "download";
 
     if ( QFile::exists( basename ) )
@@ -43,28 +43,28 @@ QString Downloader::saveFileName(const QUrl &url)
         while ( QFile::exists( basename + QString::number( i ) ) )
             ++i;
 
-        basename += QString::number(i);
+        basename += QString::number( i );
     }
 
     return basename;
 }
 
-bool Downloader::saveToDisk(const QString &filename, QIODevice *data)
+bool Downloader::saveToDisk( const QString &filename, QIODevice *data )
 {
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly))
+    QFile file( filename );
+    if ( !file.open( QIODevice::WriteOnly ) )
     {
-        qDebug() << "Could not open" << qPrintable(filename) << "for writing" << qPrintable(file.errorString());
+        qDebug() << "Could not open" << qPrintable( filename ) << "for writing" << qPrintable( file.errorString() );
         return false;
     }
 
-    file.write(data->readAll());
+    file.write( data->readAll() );
     file.close();
 
     return true;
 }
 
-bool Downloader::isHttpRedirect(QNetworkReply *reply)
+bool Downloader::isHttpRedirect( QNetworkReply *reply )
 {
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     return statusCode == 301 || statusCode == 302 || statusCode == 303
@@ -73,33 +73,33 @@ bool Downloader::isHttpRedirect(QNetworkReply *reply)
 
 void Downloader::sslErrors(const QList<QSslError> &sslErrors)
 {
-#if QT_CONFIG(ssl)
-    for (const QSslError &error : sslErrors)
-        fprintf(stderr, "SSL error: %s\n", qPrintable(error.errorString()));
+#if QT_CONFIG( ssl )
+    for ( const QSslError &error : sslErrors )
+        fprintf( stderr, "SSL error: %s\n", qPrintable( error.errorString() ) );
 #else
     Q_UNUSED(sslErrors);
 #endif
 }
 
-void Downloader::downloadFinished(QNetworkReply *reply)
+void Downloader::downloadFinished( QNetworkReply *reply )
 {
     qDebug() << "Thread finished";
     QUrl url = reply->url();
-    if (reply->error())
-        qDebug() << "Download of %s failed:" << url.toEncoded().constData() << qPrintable(reply->errorString());
+    if ( reply->error() )
+        qDebug() << "Download of %s failed:" << url.toEncoded().constData() << qPrintable( reply->errorString() );
     else
     {
-        if (isHttpRedirect(reply))        
+        if ( isHttpRedirect(reply) )
             qDebug() << "Request was redirected.\n" << stderr;        
         else
         {
             QString filename = saveFileName(url);
-            if (saveToDisk(filename, reply))            
-                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable(filename) << ')';        
+            if ( saveToDisk(filename, reply) )
+                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( filename ) << ')';
         }
     }
 
-    m_currentDownloads.removeAll(reply);
+    m_currentDownloads.removeAll( reply );
     reply->deleteLater();
 
     if ( m_currentDownloads.isEmpty() )
