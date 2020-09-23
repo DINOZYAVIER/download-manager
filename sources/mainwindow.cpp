@@ -3,13 +3,15 @@
 #include "ui_mainwindow.h"
 
 
-MainWindow::MainWindow( QWidget *parent, Downloader *downloader )
+MainWindow::MainWindow( QWidget *parent )
     : QMainWindow( parent )
     , m_ui( new Ui::MainWindow )
+
 {
     m_ui->setupUi( this );
-    m_downloadTableModel = new DownloadTableModel();
-    //m_ui->tableView->setModel( m_downloadTableModel );
+    //m_downloadTableModel = new DownloadTableModel();
+    m_downloader = new Downloader();
+    m_ui->tableView->setModel( m_downloader->downloadTableModel() );
 
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
 }
@@ -23,5 +25,5 @@ MainWindow::~MainWindow()
 void MainWindow::onDownload()
 {
     QUrl url = QUrl::fromEncoded(m_ui->PathEdit->text().toLocal8Bit());
-    Q_EMIT m_downloadTableModel->newDownloadSignal( url );
+
 }

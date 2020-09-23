@@ -5,6 +5,7 @@ Downloader::Downloader( QObject *parent ) :
     QObject( parent )
 {
     m_manager = new QNetworkAccessManager();
+    m_downloadTableModel = new DownloadTableModel;
     connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
 }
 

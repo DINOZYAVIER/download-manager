@@ -17,13 +17,16 @@ public:
     bool saveToDisk( const QString &filename, QIODevice *data );
     static bool isHttpRedirect( QNetworkReply *reply );
     int currentDownloads () { return m_currentDownloads.size(); }
-public Q_SLOTS:
+    DownloadTableModel* downloadTableModel() { return m_downloadTableModel; }
+
+private Q_SLOTS:
     //void execute();
     void downloadFinished(QNetworkReply *reply);
     void sslErrors(const QList<QSslError> &errors);
 private:
     QNetworkAccessManager *m_manager;
     QVector<QNetworkReply *> m_currentDownloads;
+    DownloadTableModel *m_downloadTableModel;
 };
 
 #endif // DOWNLOADER_H

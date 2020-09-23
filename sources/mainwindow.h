@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include "downloader.h"
-#include <downloadtablemodel.h>
+#include "downloadtablemodel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -14,7 +14,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow( QWidget *parent = nullptr, Downloader *downloader = nullptr );
+    MainWindow( QWidget *parent = nullptr );
     ~MainWindow();
 
 private Q_SLOTS:
@@ -23,5 +23,6 @@ private Q_SLOTS:
 private:
     Ui::MainWindow *m_ui;
     DownloadTableModel *m_downloadTableModel;
+    Downloader *m_downloader;
 };
 #endif // MAINWINDOW_H
