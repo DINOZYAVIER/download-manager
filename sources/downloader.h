@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QNetworkAccessManager>
+#include <QThread>
 #include "downloadtablemodel.h"
 
 class Downloader : public QObject
@@ -12,13 +13,12 @@ public:
     explicit Downloader( QObject *parent = nullptr );
     ~Downloader();
 
-    void doDownload( const QUrl &url );
+    void doDownload();
     static QString saveFileName( const QUrl &url );
     bool saveToDisk( const QString &filename, QIODevice *data );
     static bool isHttpRedirect( QNetworkReply *reply );
     int currentDownloads () { return m_currentDownloads.size(); }
-    DownloadTableModel* downloadTableModel() { return m_downloadTableModel; }
-
+    void doSetup( QThread &cThread, const QUrl &url );
 private Q_SLOTS:
     //void execute();
     void downloadFinished(QNetworkReply *reply);
@@ -26,7 +26,8 @@ private Q_SLOTS:
 private:
     QNetworkAccessManager *m_manager;
     QVector<QNetworkReply *> m_currentDownloads;
-    DownloadTableModel *m_downloadTableModel;
+    QVector<QThread> m_threads;
+    QUrl m_currentUrl;
 };
 
 #endif // DOWNLOADER_H

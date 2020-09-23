@@ -5,7 +5,6 @@ Downloader::Downloader( QObject *parent ) :
     QObject( parent )
 {
     m_manager = new QNetworkAccessManager();
-    m_downloadTableModel = new DownloadTableModel;
     connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
 }
 
@@ -14,10 +13,10 @@ Downloader::~Downloader()
     delete m_manager;
 }
 
-void Downloader::doDownload(const QUrl &url)
+void Downloader::doDownload()
 {
-    QNetworkRequest request(url);
-    QNetworkReply *reply = m_manager->get(request);
+    QNetworkRequest request( m_currentUrl );
+    QNetworkReply *reply = m_manager->get( request );
 
 #if QT_CONFIG(ssl)
     connect(reply, &QNetworkReply::sslErrors,
@@ -55,9 +54,6 @@ bool Downloader::saveToDisk(const QString &filename, QIODevice *data)
     if (!file.open(QIODevice::WriteOnly))
     {
         qDebug() << "Could not open" << qPrintable(filename) << "for writing" << qPrintable(file.errorString());
-        /*fprintf(stderr, "Could not open %s for writing: %s\n",
-                qPrintable(filename),
-                qPrintable(file.errorString()));*/
         return false;
     }
 
@@ -88,28 +84,16 @@ void Downloader::downloadFinished(QNetworkReply *reply)
 {
     QUrl url = reply->url();
     if (reply->error())
-    {
         qDebug() << "Download of %s failed:" << url.toEncoded().constData() << qPrintable(reply->errorString());
-        /*fprintf(stderr, "Download of %s failed: %s\n",
-                url.toEncoded().constData(),
-                qPrintable(reply->errorString()));*/
-    }
     else
     {
-        if (isHttpRedirect(reply))
-        {
-            qDebug() << "Request was redirected.\n" << stderr;
-            //fputs("Request was redirected.\n", stderr);
-        }
+        if (isHttpRedirect(reply))        
+            qDebug() << "Request was redirected.\n" << stderr;        
         else
         {
             QString filename = saveFileName(url);
-            if (saveToDisk(filename, reply))
-            {
-                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable(filename) << ')';
-                /*printf("Download of %s succeeded (saved to %s)\n",
-                       url.toEncoded().constData(), qPrintable(filename));*/
-            }
+            if (saveToDisk(filename, reply))            
+                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable(filename) << ')';        
         }
     }
 
@@ -123,25 +107,10 @@ void Downloader::downloadFinished(QNetworkReply *reply)
     }
 }
 
-/*
-void Downloader::execute()
+void Downloader::doSetup( QThread &cThread, const QUrl &url )
 {
-    QStringList args = QCoreApplication::instance()->arguments();
-    args.takeFirst();           // skip the first argument, which is the program's name
-    if (args.isEmpty())
-    {
-        qDebug() << "Qt Download example - downloads all URLs in parallel\n"
-                    "Usage: download url1 [url2... urlN]\n"
-                    "\n"
-                    "Downloads the URLs passed in the command-line to the local directory\n"
-                    "If the target file already exists, a .0, .1, .2, etc. is appended to\n"
-                    "differentiate.\n";
-        QCoreApplication::instance()->quit();
-        return;
-    }
+    connect( &cThread, &QThread::started, this, &Downloader::doDownload );
+    m_currentUrl = url;
+    cThread.start();
+}
 
-    for (const QString &arg : qAsConst(args)) {
-        QUrl url = QUrl::fromEncoded(arg.toLocal8Bit());
-        doDownload(url);
-    }
-}*/
