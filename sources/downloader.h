@@ -26,7 +26,6 @@ private Q_SLOTS:
 private:
     QNetworkAccessManager *m_manager;
     QVector<QNetworkReply *> m_currentDownloads;
-    QVector<QThread> m_threads;
     QUrl m_currentUrl;
 };
 

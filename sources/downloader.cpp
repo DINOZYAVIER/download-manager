@@ -15,6 +15,7 @@ Downloader::~Downloader()
 
 void Downloader::doDownload()
 {
+    qDebug() << "Thread started";
     QNetworkRequest request( m_currentUrl );
     QNetworkReply *reply = m_manager->get( request );
 
@@ -34,7 +35,7 @@ QString Downloader::saveFileName(const QUrl &url)
     if (basename.isEmpty())
         basename = "download";
 
-    if ( QFile::exists(basename) )
+    if ( QFile::exists( basename ) )
     {
         // already exists, don't overwrite
         int i = 0;
@@ -82,6 +83,7 @@ void Downloader::sslErrors(const QList<QSslError> &sslErrors)
 
 void Downloader::downloadFinished(QNetworkReply *reply)
 {
+    qDebug() << "Thread finished";
     QUrl url = reply->url();
     if (reply->error())
         qDebug() << "Download of %s failed:" << url.toEncoded().constData() << qPrintable(reply->errorString());
@@ -100,7 +102,8 @@ void Downloader::downloadFinished(QNetworkReply *reply)
     m_currentDownloads.removeAll(reply);
     reply->deleteLater();
 
-    if (m_currentDownloads.isEmpty()) {
+    if ( m_currentDownloads.isEmpty() )
+    {
         // all downloads finished
         qDebug() << "All downloads finished";
         //QCoreApplication::instance()->quit();

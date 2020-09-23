@@ -24,5 +24,6 @@ private:
     Ui::MainWindow *m_ui;
     DownloadTableModel *m_downloadTableModel;
     Downloader *m_downloader;
+    QVector<QThread*> m_threads;
 };
 #endif // MAINWINDOW_H

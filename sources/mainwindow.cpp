@@ -2,13 +2,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-QThread myThread;
-
 MainWindow::MainWindow( QWidget *parent )
     : QMainWindow( parent )
     , m_ui( new Ui::MainWindow )
 
 {
+    qDebug() << QThread::idealThreadCount();
     m_ui->setupUi( this );
     m_downloadTableModel = new DownloadTableModel();
     m_downloader = new Downloader();
@@ -21,10 +20,19 @@ MainWindow::~MainWindow()
 {
     delete m_ui;
     delete m_downloadTableModel;
+
+/*
+    while( !m_threads.isEmpty() )
+    {
+        if( m_threads.last()->isFinished() )
+            delete m_threads.takeLast();
+    }
+*/
 }
 
 void MainWindow::onDownload()
 {
-    QUrl url = QUrl::fromEncoded(m_ui->PathEdit->text().toLocal8Bit());
-    m_downloader->doSetup( myThread, url );
+    m_threads.append( new QThread() );
+    QUrl url = QUrl::fromEncoded( m_ui->PathEdit->text().toLocal8Bit() );
+    m_downloader->doSetup( *m_threads.last(), url );
 }
