@@ -106,4 +106,24 @@ void Downloader::downloadFinished( QNetworkReply* reply )
     qDebug() << "All downloads finished";
 }
 
+Controller::Controller()
+{
+    Downloader* download = new Downloader();
+    download->moveToThread( &downloadThread );
+    connect(&downloadThread, &QThread::finished, download, &QObject::deleteLater);
+    connect(download->reply(), &QNetworkReply::downloadProgress, this, &Controller::onProgress);
+    downloadThread.start();
+}
+
+Controller::~Controller()
+{
+    downloadThread.quit();
+    downloadThread.wait();
+}
+
+void Controller::onProgress( qint64 bytesReceived, qint64 bytesTotal )
+{
+
+}
+
 

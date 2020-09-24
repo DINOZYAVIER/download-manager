@@ -32,4 +32,17 @@ private:
     QElapsedTimer* m_elapsedTimer;
 };
 
+class Controller : public QObject
+{
+    Q_OBJECT
+public:
+    Controller();
+    ~Controller();
+private Q_SLOTS:
+    void onProgress( qint64 bytesReceived, qint64 bytesTotal );
+private:
+    QThread downloadThread;
+
+};
+
 #endif // DOWNLOADER_H
