@@ -53,14 +53,13 @@ void DownloadTableModel::onProgressReceived( qint64 bytesReceived, qint64 bytesT
     if( temp->size() < 2 )
         temp->append( QString::number( bytesTotal / 1048576 ) + "MB" );
     if( temp->size() < 3 )
-        temp->append( bytesReceived * 1000.0 / m_downloader->elapsedTimer()->elapsed() );
+        temp->append( QString::number( bytesReceived * 1000 / m_downloader->elapsedTimer()->elapsed() / 1024 ) + "KB/sec" );
     else
-        temp->replace( 2, bytesReceived * 1000.0 / m_downloader->elapsedTimer()->elapsed() );
+        temp->replace( 2, QString::number( bytesReceived * 1000 / m_downloader->elapsedTimer()->elapsed() / 1024 ) + "KB/sec" );
     if( temp->size() < 4 )
          temp->append( QString::number( bytesReceived ) + '/' + QString::number( bytesTotal ) );
     else
         temp->replace( 3, QString::number( bytesReceived ) + '/' + QString::number( bytesTotal ) );
-    qDebug() << *temp;
     Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
 }
 

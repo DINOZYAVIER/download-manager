@@ -28,6 +28,7 @@ void Downloader::doDownload( QUrl url)
     m_currentDownloads = reply;
     Q_EMIT setProgress();
     m_elapsedTimer = new QElapsedTimer();
+    m_elapsedTimer->start();
     //m_currentDownloads.append( reply );
 }
 
