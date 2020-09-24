@@ -19,6 +19,8 @@ public:
 
 private Q_SLOTS:
     void onDownload();
+    void onSendName( QString name );
+//    void onSendDownloadProgress( qint64 bytesReceived, qint64 bytesTotal );
 
 private:
     Ui::MainWindow *m_ui;

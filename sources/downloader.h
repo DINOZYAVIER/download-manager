@@ -19,6 +19,8 @@ public:
     static bool isHttpRedirect( QNetworkReply *reply );
     int currentDownloads () { return m_currentDownloads.size(); }
     void doSetup( QThread &cThread, const QUrl &url );
+Q_SIGNALS:
+    void sendName( QString name );
 private Q_SLOTS:
     //void execute();
     void downloadFinished(QNetworkReply *reply);

@@ -16,6 +16,7 @@ Downloader::~Downloader()
 void Downloader::doDownload()
 {
     qDebug() << "Thread started";
+    Q_EMIT sendName( saveFileName( m_currentUrl ) );
     QNetworkRequest request( m_currentUrl );
     QNetworkReply *reply = m_manager->get( request );
 
@@ -93,7 +94,7 @@ void Downloader::downloadFinished( QNetworkReply *reply )
             qDebug() << "Request was redirected.\n" << stderr;        
         else
         {
-            QString filename = saveFileName(url);
+            QString filename = saveFileName( url );
             if ( saveToDisk(filename, reply) )
                 qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( filename ) << ')';
         }
