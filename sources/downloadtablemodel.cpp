@@ -7,10 +7,42 @@ DownloadTableModel::DownloadTableModel( QObject *parent )
 {
     m_downloader = new Downloader();
     connect( m_downloader, &Downloader::setProgress, this, &DownloadTableModel::onProgressSet );
-    qDebug() << setHeaderData( 0, Qt::Horizontal, "Name" );
-    qDebug() << setHeaderData( 1, Qt::Horizontal, "Size" );
-    qDebug() << setHeaderData( 2, Qt::Horizontal, "Speed" );
-    qDebug() << setHeaderData( 3, Qt::Horizontal, "Progress" );
+
+
+
+
+}
+
+DownloadTableModel::~DownloadTableModel()
+{
+    delete m_downloader;
+}
+
+QVariant DownloadTableModel::headerData( int section, Qt::Orientation orientation, int role ) const
+{
+    if( Qt::Orientation::Horizontal == orientation && Qt::DisplayRole == role )
+    {
+        switch( section )
+        {
+            case 0:
+                return QVariant( "Name" );
+                break;
+            case 1:
+                return QVariant( "Size" );
+                break;
+            case 2:
+                return QVariant( "Speed" );
+                break;
+            case 3:
+                return QVariant( "Progress" );
+                break;
+            default:
+                break;
+        }
+    }
+    else
+        return QVariant();
+
 }
 
 int DownloadTableModel::rowCount(const QModelIndex &parent) const
@@ -25,10 +57,14 @@ int DownloadTableModel::columnCount(const QModelIndex &parent) const
 
 QVariant DownloadTableModel::data(const QModelIndex &index, int role) const
 {
-    if( index.column() > m_data.at( index.row())->size() - 1 )
-        return QVariant();
-    else
-        return m_data.at( index.row())->at( index.column() );
+    if( role == Qt::DisplayRole )
+    {
+        if( index.column() > m_data.at( index.row())->size() - 1 )
+            return QVariant();
+        else
+            return m_data.at( index.row())->at( index.column() );
+    }
+    return QVariant();
 }
 
 void DownloadTableModel::addDownload( QUrl url )
@@ -41,14 +77,13 @@ void DownloadTableModel::addDownload( QUrl url )
     m_data.append( temp );
 
     endInsertRows();
-    qDebug() << m_data.last()->last() << index( 0, 0 ) << index( m_rows - 1, NUMBER_OF_COLUMNS - 1 );
+
     Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
     m_downloader->doDownload( url );
 }
 
 void DownloadTableModel::onProgressReceived( qint64 bytesReceived, qint64 bytesTotal )
 {
-    qDebug() << "progress received";
     QVariantList* temp = m_data.last();
     if( temp->size() < 2 )
         temp->append( QString::number( bytesTotal / 1048576 ) + "MB" );
@@ -57,14 +92,13 @@ void DownloadTableModel::onProgressReceived( qint64 bytesReceived, qint64 bytesT
     else
         temp->replace( 2, QString::number( bytesReceived * 1000 / m_downloader->elapsedTimer()->elapsed() / 1024 ) + "KB/sec" );
     if( temp->size() < 4 )
-         temp->append( QString::number( bytesReceived ) + '/' + QString::number( bytesTotal ) );
+         temp->append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
     else
-        temp->replace( 3, QString::number( bytesReceived ) + '/' + QString::number( bytesTotal ) );
+        temp->replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
     Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
 }
 
 void DownloadTableModel::onProgressSet()
 {
-    qDebug() << "connect check";
     qDebug() << connect( m_downloader->reply(), &QNetworkReply::downloadProgress, this, &DownloadTableModel::onProgressReceived );
 }

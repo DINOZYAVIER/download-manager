@@ -10,10 +10,10 @@ MainWindow::MainWindow( QWidget *parent )
     m_ui->setupUi( this );
     m_downloadTableModel = new DownloadTableModel();
     m_ui->downloadTableView->setModel( m_downloadTableModel );
+    m_ui->downloadTableView->resizeRowsToContents();
 
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
-    //connect( m_downloader, &Downloader::sendName, this, &MainWindow::onSendName );
-    //connect( )
+
 }
 
 MainWindow::~MainWindow()
@@ -24,8 +24,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::onDownload()
 {
-    m_threads.append( new QThread() );
     QUrl url = QUrl::fromEncoded( m_ui->PathEdit->text().toLocal8Bit() );
     m_downloadTableModel->addDownload( url );
-    //m_downloader->doSetup( *m_threads.last(), url );
 }
