@@ -24,6 +24,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onProgressReceived( qint64 bytesReceived, qint64 bytesTotal );
+    void onProgressSet();
 private:
     int m_rows;
     QVector<QVariantList*> m_data;

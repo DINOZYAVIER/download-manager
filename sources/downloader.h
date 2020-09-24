@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QThread>
+#include <QTime>
 
 class Downloader : public QObject
 {
@@ -19,16 +20,18 @@ public:
     int currentDownloads () { return 1; }
     void doSetup( QThread &cThread, const QUrl &url );
     QNetworkReply* reply() { return m_currentDownloads; }
+    QElapsedTimer* elapsedTimer() { return m_elapsedTimer; }
 Q_SIGNALS:
     void sendName( QString name );
+    void setProgress();
 private Q_SLOTS:
     //void execute();
     void downloadFinished(QNetworkReply *reply);
     void sslErrors(const QList<QSslError> &errors);
 private:
-    QNetworkAccessManager *m_manager;
-    QNetworkReply * m_currentDownloads;
-    QUrl m_currentUrl;
+    QNetworkAccessManager* m_manager;
+    QNetworkReply* m_currentDownloads;
+    QElapsedTimer* m_elapsedTimer;
 };
 
 #endif // DOWNLOADER_H

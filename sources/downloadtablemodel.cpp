@@ -6,7 +6,7 @@ DownloadTableModel::DownloadTableModel( QObject *parent )
       m_rows( 0 )
 {
     m_downloader = new Downloader();
-    connect( m_downloader->reply(), &QNetworkReply::downloadProgress, this, &DownloadTableModel::onProgressReceived );
+    connect( m_downloader, &Downloader::setProgress, this, &DownloadTableModel::onProgressSet );
     qDebug() << setHeaderData( 0, Qt::Horizontal, "Name" );
     qDebug() << setHeaderData( 1, Qt::Horizontal, "Size" );
     qDebug() << setHeaderData( 2, Qt::Horizontal, "Speed" );
@@ -50,14 +50,22 @@ void DownloadTableModel::onProgressReceived( qint64 bytesReceived, qint64 bytesT
 {
     qDebug() << "progress received";
     QVariantList* temp = m_data.last();
-    if( temp->size() < 1 )
-        temp->append( QString::number( bytesTotal ) );
     if( temp->size() < 2 )
-        temp->append( "speed" );
+        temp->append( QString::number( bytesTotal / 1048576 ) + "MB" );
     if( temp->size() < 3 )
+        temp->append( bytesReceived * 1000.0 / m_downloader->elapsedTimer()->elapsed() );
+    else
+        temp->replace( 2, bytesReceived * 1000.0 / m_downloader->elapsedTimer()->elapsed() );
+    if( temp->size() < 4 )
          temp->append( QString::number( bytesReceived ) + '/' + QString::number( bytesTotal ) );
     else
         temp->replace( 3, QString::number( bytesReceived ) + '/' + QString::number( bytesTotal ) );
     qDebug() << *temp;
+    Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
+}
 
+void DownloadTableModel::onProgressSet()
+{
+    qDebug() << "connect check";
+    qDebug() << connect( m_downloader->reply(), &QNetworkReply::downloadProgress, this, &DownloadTableModel::onProgressReceived );
 }

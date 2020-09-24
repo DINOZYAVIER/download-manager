@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QCoreApplication>
 #include <QHeaderView>
+#include <QTimer>
 #endif
 
 #endif // PRECOMPILED_H

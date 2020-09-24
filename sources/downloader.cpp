@@ -19,12 +19,15 @@ void Downloader::doDownload( QUrl url)
     Q_EMIT sendName( saveFileName( url ) );
     QNetworkRequest request( url );
     QNetworkReply *reply = m_manager->get( request );
+    Q_EMIT setProgress();
 
 #if QT_CONFIG(ssl)
     connect( reply, &QNetworkReply::sslErrors,
             this, &Downloader::sslErrors );
 #endif
-
+    m_currentDownloads = reply;
+    Q_EMIT setProgress();
+    m_elapsedTimer = new QElapsedTimer();
     //m_currentDownloads.append( reply );
 }
 
@@ -117,4 +120,5 @@ void Downloader::doSetup( QThread &cThread, const QUrl &url )
     //m_currentUrl = url;
     //cThread.start();
 }
+
 
