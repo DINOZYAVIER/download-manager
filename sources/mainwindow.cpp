@@ -2,7 +2,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow( QWidget *parent )
+MainWindow::MainWindow( QWidget* parent )
     : QMainWindow( parent )
     , m_ui( new Ui::MainWindow )
 
@@ -13,7 +13,6 @@ MainWindow::MainWindow( QWidget *parent )
     m_ui->downloadTableView->resizeRowsToContents();
 
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
-
 }
 
 MainWindow::~MainWindow()

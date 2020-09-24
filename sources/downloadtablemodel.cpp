@@ -7,10 +7,6 @@ DownloadTableModel::DownloadTableModel( QObject *parent )
 {
     m_downloader = new Downloader();
     connect( m_downloader, &Downloader::setProgress, this, &DownloadTableModel::onProgressSet );
-
-
-
-
 }
 
 DownloadTableModel::~DownloadTableModel()
@@ -37,12 +33,12 @@ QVariant DownloadTableModel::headerData( int section, Qt::Orientation orientatio
                 return QVariant( "Progress" );
                 break;
             default:
+                return QVariant();
                 break;
         }
     }
     else
         return QVariant();
-
 }
 
 int DownloadTableModel::rowCount(const QModelIndex &parent) const
