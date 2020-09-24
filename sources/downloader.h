@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QThread>
-#include "downloadtablemodel.h"
 
 class Downloader : public QObject
 {
@@ -13,12 +12,13 @@ public:
     explicit Downloader( QObject *parent = nullptr );
     ~Downloader();
 
-    void doDownload();
+    void doDownload( QUrl url );
     static QString saveFileName( const QUrl &url );
     bool saveToDisk( const QString &filename, QIODevice *data );
     static bool isHttpRedirect( QNetworkReply *reply );
-    int currentDownloads () { return m_currentDownloads.size(); }
+    int currentDownloads () { return 1; }
     void doSetup( QThread &cThread, const QUrl &url );
+    QNetworkReply* reply() { return m_currentDownloads; }
 Q_SIGNALS:
     void sendName( QString name );
 private Q_SLOTS:
@@ -27,7 +27,7 @@ private Q_SLOTS:
     void sslErrors(const QList<QSslError> &errors);
 private:
     QNetworkAccessManager *m_manager;
-    QVector<QNetworkReply *> m_currentDownloads;
+    QNetworkReply * m_currentDownloads;
     QUrl m_currentUrl;
 };
 

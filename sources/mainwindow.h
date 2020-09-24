@@ -19,13 +19,10 @@ public:
 
 private Q_SLOTS:
     void onDownload();
-    void onSendName( QString name );
-//    void onSendDownloadProgress( qint64 bytesReceived, qint64 bytesTotal );
 
 private:
     Ui::MainWindow *m_ui;
     DownloadTableModel *m_downloadTableModel;
-    Downloader *m_downloader;
     QVector<QThread*> m_threads;
 };
 #endif // MAINWINDOW_H

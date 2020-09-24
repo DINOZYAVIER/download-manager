@@ -13,11 +13,11 @@ Downloader::~Downloader()
     delete m_manager;
 }
 
-void Downloader::doDownload()
+void Downloader::doDownload( QUrl url)
 {
     qDebug() << "Thread started";
-    Q_EMIT sendName( saveFileName( m_currentUrl ) );
-    QNetworkRequest request( m_currentUrl );
+    Q_EMIT sendName( saveFileName( url ) );
+    QNetworkRequest request( url );
     QNetworkReply *reply = m_manager->get( request );
 
 #if QT_CONFIG(ssl)
@@ -25,7 +25,7 @@ void Downloader::doDownload()
             this, &Downloader::sslErrors );
 #endif
 
-    m_currentDownloads.append( reply );
+    //m_currentDownloads.append( reply );
 }
 
 QString Downloader::saveFileName( const QUrl &url )
@@ -100,10 +100,10 @@ void Downloader::downloadFinished( QNetworkReply *reply )
         }
     }
 
-    m_currentDownloads.removeAll( reply );
+    //m_currentDownloads.removeAll( reply );
     reply->deleteLater();
 
-    if ( m_currentDownloads.isEmpty() )
+   // if ( m_currentDownloads.isEmpty() )
     {
         // all downloads finished
         qDebug() << "All downloads finished";
@@ -113,8 +113,8 @@ void Downloader::downloadFinished( QNetworkReply *reply )
 
 void Downloader::doSetup( QThread &cThread, const QUrl &url )
 {
-    connect( &cThread, &QThread::started, this, &Downloader::doDownload );
-    m_currentUrl = url;
-    cThread.start();
+    //connect( &cThread, &QThread::started, this, &Downloader::doDownload );
+    //m_currentUrl = url;
+    //cThread.start();
 }
 
