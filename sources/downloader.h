@@ -36,13 +36,17 @@ class Controller : public QObject
 {
     Q_OBJECT
 public:
-    Controller();
+    Controller( int id );
     ~Controller();
+Q_SIGNALS:
+    void sendProgress( int i, QVariantList* );
 private Q_SLOTS:
     void onProgress( qint64 bytesReceived, qint64 bytesTotal );
 private:
-    QThread downloadThread;
-
+    int m_id;
+    QVariantList* m_dataList;
+    QThread m_downloadThread;
+    QElapsedTimer* m_elapsedTimer;
 };
 
 #endif // DOWNLOADER_H

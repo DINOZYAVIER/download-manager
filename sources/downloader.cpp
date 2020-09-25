@@ -106,24 +106,40 @@ void Downloader::downloadFinished( QNetworkReply* reply )
     qDebug() << "All downloads finished";
 }
 
-Controller::Controller()
+Controller::Controller( int id ) :
+    m_id( id )
 {
+    m_dataList = new QVariantList();
     Downloader* download = new Downloader();
-    download->moveToThread( &downloadThread );
-    connect(&downloadThread, &QThread::finished, download, &QObject::deleteLater);
-    connect(download->reply(), &QNetworkReply::downloadProgress, this, &Controller::onProgress);
-    downloadThread.start();
+    download->moveToThread( &m_downloadThread );
+    connect( &m_downloadThread, &QThread::finished, download, &QObject::deleteLater );
+    connect( download->reply(), &QNetworkReply::downloadProgress, this, &Controller::onProgress );
+    m_downloadThread.start();
+    m_elapsedTimer = new QElapsedTimer();
+    m_elapsedTimer->start();
 }
 
 Controller::~Controller()
 {
-    downloadThread.quit();
-    downloadThread.wait();
+    delete m_elapsedTimer;
+    m_downloadThread.quit();
+    m_downloadThread.wait();
 }
 
 void Controller::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
-
+    if( m_dataList->size() < 2 )
+        m_dataList->append( QString::number( bytesTotal / 1048576 ) + "MB" );
+    if( m_dataList->size() < 3 )
+        m_dataList->append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
+    else
+        m_dataList->replace( 2, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
+    if( m_dataList->size() < 4 )
+         m_dataList->append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
+    else
+        m_dataList->replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
+    Q_EMIT sendProgress( m_id, m_dataList );
+   // Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
 }
 
 
