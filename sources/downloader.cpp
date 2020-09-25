@@ -5,7 +5,6 @@ Downloader::Downloader( QObject* parent, const QUrl& url, QVariant id ) :
     QObject( parent )
   , m_currentUrl( url )
 {
-    m_dataList.append( id );
     m_dataList.append( saveFileName( m_currentUrl ) );
     m_dataList.append( "" );
     m_dataList.append( "" );
@@ -72,7 +71,7 @@ bool Downloader::saveToDisk( const QString& filename, QIODevice* data )
 
 bool Downloader::isHttpRedirect( QNetworkReply* reply )
 {
-    int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    int statusCode = reply->attribute( QNetworkRequest::HttpStatusCodeAttribute ).toInt();
     return statusCode == 301 || statusCode == 302 || statusCode == 303
            || statusCode == 305 || statusCode == 307 || statusCode == 308;
 }
@@ -112,11 +111,10 @@ void Downloader::downloadFinished( QNetworkReply* reply )
 
 void Downloader::onProcess( qint64 bytesReceived, qint64 bytesTotal )
 {
-    m_dataList.replace( 2, QString::number( bytesTotal / 1048576 ) + "MB" );
-    m_dataList.replace( 3, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    m_dataList.replace( 4, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    //qDebug() << m_dataList;
-    Q_EMIT sendProgress( &m_dataList );
+    m_dataList.replace( 1, QString::number( bytesTotal / 1048576 ) + "MB" );
+    m_dataList.replace( 2, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
+    m_dataList.replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
+    Q_EMIT sendProgress();
 }
 
 Controller::Controller( DownloadTableModel* model ) :
@@ -148,9 +146,10 @@ Controller::~Controller()
     }*/
 }
 
-void Controller::onDisplay( QVariantList* list )
+void Controller::onDisplay()
 {
-    m_model->setDataList( list );
+    for( int i = 0; i < m_journal.size(); ++i )
+        m_model->setDataList( m_journal.value( i )->second->dataList(), i );
 }
 
 

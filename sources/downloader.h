@@ -20,7 +20,7 @@ public:
     QVariantList* dataList() { return &m_dataList; }
     QNetworkReply* reply() { return m_currentReply; }
 Q_SIGNALS:
-    void sendProgress( QVariantList* list );
+    void sendProgress();
 private Q_SLOTS:
     void onProcess( qint64 bytesReceived, qint64 bytesTotal );
     void downloadFinished( QNetworkReply* reply );
@@ -40,10 +40,8 @@ public:
     Controller( DownloadTableModel* model );
     ~Controller();
     void addDownload( QUrl url );
-Q_SIGNALS:
-    void sendProgress( int i, QVariantList* );
 private Q_SLOTS:
-    void onDisplay( QVariantList* list );
+    void onDisplay();
 private:
     DownloadTableModel* m_model;
     QMap<int, QPair<QThread*, Downloader*>*> m_journal;

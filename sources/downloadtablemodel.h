@@ -17,12 +17,9 @@ public:
     int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
     int columnCount( const QModelIndex& parent = QModelIndex() ) const override;
     QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
-    void setDataList( QVariantList* dataList );
+    void setDataList( QVariantList* dataList, int number );
 Q_SIGNALS:
-    void displayReady( QVariantList* list );
 private Q_SLOTS:
-    //void onProgressReceived( qint64 bytesReceived, qint64 bytesTotal );
-    //void onProgressSet();
 private:
     int m_rows;
     QVector<QVariantList*> m_data;

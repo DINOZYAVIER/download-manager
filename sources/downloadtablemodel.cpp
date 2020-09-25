@@ -5,7 +5,6 @@ DownloadTableModel::DownloadTableModel( QObject *parent )
     : QAbstractTableModel( parent ),
       m_rows( 0 )
 {
-    connect( this, &DownloadTableModel::displayReady, this, &DownloadTableModel::setDataList );
 }
 
 DownloadTableModel::~DownloadTableModel()
@@ -61,11 +60,16 @@ QVariant DownloadTableModel::data( const QModelIndex &index, int role ) const
     return QVariant();
 }
 
-void DownloadTableModel::setDataList( QVariantList* dataList )
+void DownloadTableModel::setDataList( QVariantList* dataList, int number )
 {
-    beginInsertRows( QModelIndex(), m_rows, m_rows );
+    if( number >= m_rows )
+    {
+        beginInsertRows( QModelIndex(), m_rows, m_rows );
+        m_data.append( dataList );
+        ++m_rows;
+        endInsertRows();
+    }
 
-    endInsertRows();
     Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
 }
 
