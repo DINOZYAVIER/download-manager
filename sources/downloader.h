@@ -46,7 +46,8 @@ private Q_SLOTS:
     void onDisplay( QVariantList* list );
 private:
     DownloadTableModel* m_model;
-    QVector<QThread*> m_downloadThread;
+    QMap<int, QPair<QThread*, Downloader*>*> m_journal;
+    int m_threads;
 };
 
 #endif // DOWNLOADER_H

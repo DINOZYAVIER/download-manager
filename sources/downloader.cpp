@@ -6,9 +6,10 @@ Downloader::Downloader( QObject* parent, const QUrl& url, QVariant id ) :
   , m_currentUrl( url )
 {
     m_dataList.append( id );
-    m_manager = new QNetworkAccessManager();
-    connect( m_manager->get( QNetworkRequest( m_currentUrl ) ), &QNetworkReply::downloadProgress, this, &Downloader::onProcess );
-    connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
+    m_dataList.append( saveFileName( m_currentUrl ) );
+    m_dataList.append( "" );
+    m_dataList.append( "" );
+    m_dataList.append( "" );
 }
 
 Downloader::~Downloader()
@@ -18,7 +19,10 @@ Downloader::~Downloader()
 
 void Downloader::doDownload()
 {
-    m_dataList.append( saveFileName( m_currentUrl ) );
+    qDebug() << "started";
+    m_manager = new QNetworkAccessManager();
+    connect( m_manager->get( QNetworkRequest( m_currentUrl ) ), &QNetworkReply::downloadProgress, this, &Downloader::onProcess );
+    connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
     QNetworkRequest request( m_currentUrl );
 
 #if QT_CONFIG(ssl)
@@ -108,44 +112,45 @@ void Downloader::downloadFinished( QNetworkReply* reply )
 
 void Downloader::onProcess( qint64 bytesReceived, qint64 bytesTotal )
 {
-    if( m_dataList.size() < 2 )
-        m_dataList.append( QString::number( bytesTotal / 1048576 ) + "MB" );
-    if( m_dataList.size() < 3 )
-        m_dataList.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    else
-        m_dataList.replace( 2, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    if( m_dataList.size() < 4 )
-         m_dataList.append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    else
-        m_dataList.replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    //Q_EMIT sendProgress( &m_dataList );
+    m_dataList.replace( 2, QString::number( bytesTotal / 1048576 ) + "MB" );
+    m_dataList.replace( 3, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
+    m_dataList.replace( 4, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
+    //qDebug() << m_dataList;
+    Q_EMIT sendProgress( &m_dataList );
 }
 
 Controller::Controller( DownloadTableModel* model ) :
     m_model( model )
+  , m_threads( 0 )
 {
 }
 
 void Controller::addDownload( QUrl url )
 {
+
+    QThread* downloadThread = new QThread();
     Downloader* download = new Downloader( nullptr, url );
-    m_downloadThread.append( new QThread() );
-    download->moveToThread( m_downloadThread.last() );
-    connect( m_downloadThread.last(), &QThread::started, download, &Downloader::doDownload );
+    m_journal.insert( m_threads++, new QPair<QThread*, Downloader*>( downloadThread, download ) );
+    download->moveToThread( downloadThread );
+    connect( downloadThread, &QThread::started, download, &Downloader::doDownload );
     connect( download, &Downloader::sendProgress, this, &Controller::onDisplay );
-    connect( m_downloadThread.last(), &QThread::finished, download, &QObject::deleteLater );
-    m_downloadThread.last()->start();
+    connect( downloadThread, &QThread::finished, download, &QObject::deleteLater );
+    downloadThread->start();
 }
 
 Controller::~Controller()
-{
-    m_downloadThread.last()->quit();
-    m_downloadThread.last()->wait();
+{/*
+    while( !m_downloadThread.isEmpty() )
+    {
+        m_downloadThread.last()->quit();
+        m_downloadThread.last()->wait();
+        delete m_downloadThread.last();
+    }*/
 }
 
 void Controller::onDisplay( QVariantList* list )
 {
-
+    m_model->setDataList( list );
 }
 
 
