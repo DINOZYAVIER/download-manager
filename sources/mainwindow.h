@@ -5,6 +5,7 @@
 #include "downloader.h"
 #include "downloadtablemodel.h"
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -23,6 +24,7 @@ private Q_SLOTS:
 private:
     Ui::MainWindow* m_ui;
     DownloadTableModel* m_downloadTableModel;
+    Controller* m_controller;
     QVector<QThread*> m_threads;
 };
 #endif // MAINWINDOW_H

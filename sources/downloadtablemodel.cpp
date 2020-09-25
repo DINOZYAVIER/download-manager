@@ -5,13 +5,10 @@ DownloadTableModel::DownloadTableModel( QObject *parent )
     : QAbstractTableModel( parent ),
       m_rows( 0 )
 {
-    m_downloader = new Downloader();
-    connect( m_downloader, &Downloader::setProgress, this, &DownloadTableModel::onProgressSet );
 }
 
 DownloadTableModel::~DownloadTableModel()
 {
-    delete m_downloader;
 }
 
 QVariant DownloadTableModel::headerData( int section, Qt::Orientation orientation, int role ) const
@@ -51,7 +48,7 @@ int DownloadTableModel::columnCount(const QModelIndex &parent) const
     return NUMBER_OF_COLUMNS;
 }
 
-QVariant DownloadTableModel::data(const QModelIndex &index, int role) const
+QVariant DownloadTableModel::data( const QModelIndex &index, int role ) const
 {
     if( role == Qt::DisplayRole )
     {
@@ -63,38 +60,22 @@ QVariant DownloadTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-void DownloadTableModel::addDownload( QUrl url )
+void DownloadTableModel::setDataList( QVariantList* dataList )
 {
-    beginInsertRows( QModelIndex(), m_rows, m_rows );
-
-    ++m_rows;
-    QVariantList *temp = new QVariantList();
-    temp->append( QFileInfo( url.path() ).fileName() );
-    m_data.append( temp );
-
-    endInsertRows();
-
-    Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
-    m_downloader->doDownload( url );
-}
-
-void DownloadTableModel::onProgressReceived( qint64 bytesReceived, qint64 bytesTotal )
-{
-    QVariantList* temp = m_data.last();
-    if( temp->size() < 2 )
-        temp->append( QString::number( bytesTotal / 1048576 ) + "MB" );
-    if( temp->size() < 3 )
-        temp->append( QString::number( bytesReceived * 1000 / m_downloader->elapsedTimer()->elapsed() / 1024 ) + "KB/sec" );
-    else
-        temp->replace( 2, QString::number( bytesReceived * 1000 / m_downloader->elapsedTimer()->elapsed() / 1024 ) + "KB/sec" );
-    if( temp->size() < 4 )
-         temp->append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    else
-        temp->replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
+    int temp = dataList->first().toInt();
+    dataList->pop_front();
+    if( m_data.size() > temp )
+    {
+        if( m_data.at( temp ) == nullptr )
+        {
+            m_data.append( dataList );
+            ++m_rows;
+        }
+        else
+            m_data.replace( temp, dataList );
+    }
     Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
 }
 
-void DownloadTableModel::onProgressSet()
-{
-    qDebug() << connect( m_downloader->reply(), &QNetworkReply::downloadProgress, this, &DownloadTableModel::onProgressReceived );
-}
+
+

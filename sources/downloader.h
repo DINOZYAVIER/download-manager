@@ -4,31 +4,32 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QThread>
-#include <QTime>
+#include "downloadtablemodel.h"
 
 class Downloader : public QObject
 {
     Q_OBJECT
 public:
-    explicit Downloader( QObject* parent = nullptr );
+    explicit Downloader( QObject* parent = nullptr, const QUrl& url = QUrl(), QVariant id = 0 );
     ~Downloader();
 
-    void doDownload( QUrl url );
+    void doDownload();
     static QString saveFileName( const QUrl& url );
     bool saveToDisk( const QString& filename, QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
-    int currentDownloads () { return 1; }
+    QVariantList* dataList() { return &m_dataList; }
     QNetworkReply* reply() { return m_currentReply; }
-    QElapsedTimer* elapsedTimer() { return m_elapsedTimer; }
 Q_SIGNALS:
-    void sendName( QString name );
-    void setProgress();
+    void sendProgress( QVariantList* list );
 private Q_SLOTS:
+    void onProcess( qint64 bytesReceived, qint64 bytesTotal );
     void downloadFinished( QNetworkReply* reply );
     void sslErrors( const QList<QSslError>& errors );
 private:
     QNetworkAccessManager* m_manager;
+    QVariantList m_dataList;
     QNetworkReply* m_currentReply;
+    QUrl m_currentUrl;
     QElapsedTimer* m_elapsedTimer;
 };
 
@@ -36,17 +37,16 @@ class Controller : public QObject
 {
     Q_OBJECT
 public:
-    Controller( int id );
+    Controller( DownloadTableModel* model );
     ~Controller();
+    void addDownload( QUrl url );
 Q_SIGNALS:
     void sendProgress( int i, QVariantList* );
 private Q_SLOTS:
-    void onProgress( qint64 bytesReceived, qint64 bytesTotal );
+    void onDisplay( QVariantList* list );
 private:
-    int m_id;
-    QVariantList* m_dataList;
-    QThread m_downloadThread;
-    QElapsedTimer* m_elapsedTimer;
+    DownloadTableModel* m_model;
+    QVector<QThread*> m_downloadThread;
 };
 
 #endif // DOWNLOADER_H
