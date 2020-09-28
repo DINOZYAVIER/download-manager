@@ -28,5 +28,4 @@ void MainWindow::onDownload()
 {
     QUrl url = QUrl::fromEncoded( m_ui->PathEdit->text().toLocal8Bit() );
     m_controller->addDownload( url );
-    //m_downloadTableModel->addDownload( url );
 }

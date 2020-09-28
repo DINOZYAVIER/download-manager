@@ -2,8 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "downloader.h"
-#include "downloadtablemodel.h"
+#include "controller.h"
 
 
 QT_BEGIN_NAMESPACE

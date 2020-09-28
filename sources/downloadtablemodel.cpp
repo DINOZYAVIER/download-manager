@@ -38,19 +38,19 @@ QVariant DownloadTableModel::headerData( int section, Qt::Orientation orientatio
         return QVariant();
 }
 
-int DownloadTableModel::rowCount(const QModelIndex &parent) const
+int DownloadTableModel::rowCount( const QModelIndex &parent ) const
 {
     return m_rows;
 }
 
-int DownloadTableModel::columnCount(const QModelIndex &parent) const
+int DownloadTableModel::columnCount( const QModelIndex &parent ) const
 {
     return NUMBER_OF_COLUMNS;
 }
 
 QVariant DownloadTableModel::data( const QModelIndex &index, int role ) const
 {
-    if( role == Qt::DisplayRole )
+    if( role == Qt::DisplayRole && index.isValid() )
     {
         if( index.column() > m_data.at( index.row())->size() - 1 )
             return QVariant();
@@ -69,7 +69,6 @@ void DownloadTableModel::setDataList( QVariantList* dataList, int number )
         ++m_rows;
         endInsertRows();
     }
-
     Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
 }
 

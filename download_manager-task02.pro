@@ -28,12 +28,14 @@ INCLUDEPATH += \
     $$PWD/sources/
 
 SOURCES += \
+    sources/controller.cpp \
     sources/downloader.cpp \
     sources/downloadtablemodel.cpp \
     sources/main.cpp \
     sources/mainwindow.cpp
 
 HEADERS += \
+    sources/controller.h \
     sources/downloader.h \
     sources/downloadtablemodel.h \
     sources/mainwindow.h \

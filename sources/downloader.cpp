@@ -18,7 +18,7 @@ Downloader::~Downloader()
 
 void Downloader::doDownload()
 {
-    qDebug() << "started";
+    qDebug() << "Download started. ";
     m_manager = new QNetworkAccessManager();
     connect( m_manager->get( QNetworkRequest( m_currentUrl ) ), &QNetworkReply::downloadProgress, this, &Downloader::onProcess );
     connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
@@ -117,39 +117,5 @@ void Downloader::onProcess( qint64 bytesReceived, qint64 bytesTotal )
     Q_EMIT sendProgress();
 }
 
-Controller::Controller( DownloadTableModel* model ) :
-    m_model( model )
-  , m_threads( 0 )
-{
-}
-
-void Controller::addDownload( QUrl url )
-{
-
-    QThread* downloadThread = new QThread();
-    Downloader* download = new Downloader( nullptr, url );
-    m_journal.insert( m_threads++, new QPair<QThread*, Downloader*>( downloadThread, download ) );
-    download->moveToThread( downloadThread );
-    connect( downloadThread, &QThread::started, download, &Downloader::doDownload );
-    connect( download, &Downloader::sendProgress, this, &Controller::onDisplay );
-    connect( downloadThread, &QThread::finished, download, &QObject::deleteLater );
-    downloadThread->start();
-}
-
-Controller::~Controller()
-{/*
-    while( !m_downloadThread.isEmpty() )
-    {
-        m_downloadThread.last()->quit();
-        m_downloadThread.last()->wait();
-        delete m_downloadThread.last();
-    }*/
-}
-
-void Controller::onDisplay()
-{
-    for( int i = 0; i < m_journal.size(); ++i )
-        m_model->setDataList( m_journal.value( i )->second->dataList(), i );
-}
 
 
