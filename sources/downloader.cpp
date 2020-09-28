@@ -15,9 +15,13 @@ Downloader::~Downloader()
 {
     if( m_reply && m_reply->isRunning() )
     {
-        m_reply->abort();
-        m_reply->close();
-        // TODO Delete file
+        if( m_reply->isRunning() )
+        {
+            m_reply->abort();
+            m_reply->close();
+            // TODO Delete file
+        }
+        m_reply->deleteLater();
     }
 
     if( m_elapsedTimer )
@@ -33,7 +37,6 @@ void Downloader::doDownload()
     qDebug() << "Thread ID" << QThread::currentThreadId();
 
     auto* manager = new QNetworkAccessManager( this );
-    manager->setAutoDeleteReplies( true );
     m_reply = manager->get( QNetworkRequest( m_url ) );
 
     m_elapsedTimer = new QElapsedTimer();

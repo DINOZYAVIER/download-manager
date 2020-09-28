@@ -54,7 +54,8 @@ void Controller::removeItem( int index )
 
 void Controller::releaseItem( JournalItem& item )
 {
-    item.downloader->disconnect();
+    if( item.downloader )
+        disconnect( item.downloader, nullptr, this, nullptr );
     item.downloader = nullptr;
     if( item.thread && item.thread->isRunning() )
     {
