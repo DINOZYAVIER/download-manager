@@ -2,13 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "downloader.h"
-#include "downloadtablemodel.h"
 
-
-QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+class Controller;
+class DownloadTableModel;
 
 class MainWindow : public QMainWindow
 {
@@ -22,9 +19,8 @@ private Q_SLOTS:
     void onDownload();
 
 private:
-    Ui::MainWindow* m_ui;
+    Ui::MainWindow*     m_ui;
     DownloadTableModel* m_downloadTableModel;
-    Controller* m_controller;
-    QVector<QThread*> m_threads;
+    Controller*         m_controller;
 };
 #endif // MAINWINDOW_H

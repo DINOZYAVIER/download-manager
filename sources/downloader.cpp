@@ -1,57 +1,48 @@
 #include "precompiled.h"
 #include "downloader.h"
 
-Downloader::Downloader( QObject* parent, const QUrl& url, QVariant id ) :
-    QObject( parent )
-  , m_currentUrl( url )
+Downloader::Downloader( const QUrl& url ) :
+    QObject( nullptr ),
+    m_url( url ),
+    m_reply( nullptr ),
+    m_elapsedTimer( nullptr ),
+    m_thread( nullptr )
 {
-    m_dataList.append( saveFileName( m_currentUrl ) );
-    m_dataList.append( "" );
-    m_dataList.append( "" );
-    m_dataList.append( "" );
+    m_file = saveFileName( m_url );
 }
 
 Downloader::~Downloader()
 {
-    delete m_manager;
+    if( m_reply && m_reply->isRunning() )
+    {
+        m_reply->abort();
+        m_reply->close();
+        // TODO Delete file
+    }
+
+    if( m_elapsedTimer )
+    {
+        m_elapsedTimer->invalidate();
+        delete m_elapsedTimer;
+    }
 }
 
 void Downloader::doDownload()
 {
-    qDebug() << "started";
-    m_manager = new QNetworkAccessManager();
-    connect( m_manager->get( QNetworkRequest( m_currentUrl ) ), &QNetworkReply::downloadProgress, this, &Downloader::onProcess );
-    connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
-    QNetworkRequest request( m_currentUrl );
+    qDebug() << "Starting download" << m_url;
+    qDebug() << "Thread ID" << QThread::currentThreadId();
 
-#if QT_CONFIG(ssl)
-    connect( m_manager->get( request ), &QNetworkReply::sslErrors,
-            this, &Downloader::sslErrors );
-#endif
+    auto* manager = new QNetworkAccessManager( this );
+    manager->setAutoDeleteReplies( true );
+    m_reply = manager->get( QNetworkRequest( m_url ) );
+
     m_elapsedTimer = new QElapsedTimer();
     m_elapsedTimer->start();
-}
 
-QString Downloader::saveFileName( const QUrl& url )
-{
-    QString path = url.path();
-    QString basename = QFileInfo( path ).fileName();
-
-    if( basename.isEmpty() )
-        basename = "download";
-
-    if( QFile::exists( basename ) )
-    {
-        // already exists, don't overwrite
-        int i = 0;
-        basename += '_';
-        while( QFile::exists( basename + QString::number( i ) ) )
-            ++i;
-
-        basename += QString::number( i );
-    }
-
-    return basename;
+    connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+    connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+    connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 }
 
 bool Downloader::saveToDisk( const QString& filename, QIODevice* data )
@@ -76,80 +67,64 @@ bool Downloader::isHttpRedirect( QNetworkReply* reply )
            || statusCode == 305 || statusCode == 307 || statusCode == 308;
 }
 
-void Downloader::sslErrors( const QList<QSslError>& sslErrors )
+void Downloader::onError( QNetworkReply::NetworkError code )
 {
-#if QT_CONFIG( ssl )
-    for( const QSslError &error : sslErrors )
-        fprintf( stderr, "SSL error: %s\n", qPrintable( error.errorString() ) );
-#else
-    Q_UNUSED(sslErrors);
-#endif
+    qDebug() << QString( "Downloading of %1 failed" ).arg( m_url.toString() );
+    qDebug() << "Error code:" << code << " Error:" << m_reply->errorString();
 }
 
-void Downloader::downloadFinished( QNetworkReply* reply )
+void Downloader::onSSLError( const QList<QSslError>& sslErrors )
 {
-    QUrl url = reply->url();
-    if( reply->error() )
-        qDebug() << "Download of %s failed:" << url.toEncoded().constData() << qPrintable( reply->errorString() );
-    else
+    for( const auto& error : sslErrors )
+        qDebug() << "SSL error:" << error.errorString();
+}
+
+void Downloader::onFinished()
+{
+    QUrl url = m_reply->url();
+    if( m_reply->error() == QNetworkReply::NoError )
     {
-        if( isHttpRedirect( reply ) )
-            qDebug() << "Request was redirected.\n" << stderr;        
+        if( isHttpRedirect( m_reply ) )
+            qDebug() << "Request was redirected.\n";
         else
         {
-            QString filename = saveFileName( url );
-            if( saveToDisk( filename, reply ) )
-                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( filename ) << ')';
+            if( saveToDisk( m_file, m_reply ) )
+                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file ) << ')';
         }
     }
 
-    reply->deleteLater();
-
-    // download finished
-    qDebug() << "All downloads finished";
+    Q_EMIT finished();
 }
 
-void Downloader::onProcess( qint64 bytesReceived, qint64 bytesTotal )
+void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
-    m_dataList.replace( 1, QString::number( bytesTotal / 1048576 ) + "MB" );
-    m_dataList.replace( 2, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    m_dataList.replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    Q_EMIT sendProgress();
+    QVariantList data;
+    data.append( m_file );
+    data.append( QString::number( bytesTotal / 1048576 ) + "MB" );
+    data.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
+    data.append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
+    Q_EMIT progressChanged( data );
 }
 
-Controller::Controller( DownloadTableModel* model ) :
-    m_model( model )
-  , m_threads( 0 )
+QString Downloader::saveFileName( const QUrl& url )
 {
-}
+    QString path = url.path();
+    QString basename = QFileInfo( path ).fileName();
 
-void Controller::addDownload( QUrl url )
-{
+    if( basename.isEmpty() )
+        basename = "download";
 
-    QThread* downloadThread = new QThread();
-    Downloader* download = new Downloader( nullptr, url );
-    m_journal.insert( m_threads++, new QPair<QThread*, Downloader*>( downloadThread, download ) );
-    download->moveToThread( downloadThread );
-    connect( downloadThread, &QThread::started, download, &Downloader::doDownload );
-    connect( download, &Downloader::sendProgress, this, &Controller::onDisplay );
-    connect( downloadThread, &QThread::finished, download, &QObject::deleteLater );
-    downloadThread->start();
-}
-
-Controller::~Controller()
-{/*
-    while( !m_downloadThread.isEmpty() )
+    if( QFile::exists( basename ) )
     {
-        m_downloadThread.last()->quit();
-        m_downloadThread.last()->wait();
-        delete m_downloadThread.last();
-    }*/
-}
+        // already exists, don't overwrite
+        int i = 0;
+        basename += '_';
+        while( QFile::exists( basename + QString::number( i ) ) )
+            ++i;
 
-void Controller::onDisplay()
-{
-    for( int i = 0; i < m_journal.size(); ++i )
-        m_model->setDataList( m_journal.value( i )->second->dataList(), i );
-}
+        basename += QString::number( i );
+    }
 
+    return basename;
+}
 

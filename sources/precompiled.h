@@ -12,7 +12,8 @@
 #include <QUrl>
 #include <QDebug>
 #include <QCoreApplication>
-#include <QHeaderView>
+#include <QThread>
+#include <QAbstractEventDispatcher>
 #include <QTimer>
 #endif
 

@@ -1,6 +1,4 @@
-QT       += core gui network
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core gui widgets network
 
 CONFIG += c++11
 
@@ -21,20 +19,21 @@ VERSION = $$BUILD_VERSION
 
 LIBS += -L/usr/local/opt/openssl@1.1/lib
 
-# Add include path (simplify include in the source files)
-PRECOMPILED_HEADER = precompiled.h
+PRECOMPILED_HEADER = sources/precompiled.h
 
 INCLUDEPATH += \
     $$PWD/sources/
 
 SOURCES += \
     sources/downloader.cpp \
+    sources/controller.cpp \
     sources/downloadtablemodel.cpp \
     sources/main.cpp \
     sources/mainwindow.cpp
 
 HEADERS += \
     sources/downloader.h \
+    sources/controller.h \
     sources/downloadtablemodel.h \
     sources/mainwindow.h \
     sources/precompiled.h
