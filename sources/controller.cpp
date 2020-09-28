@@ -17,18 +17,16 @@ void Controller::addDownload( QUrl url )
     connect( download, &Downloader::sendProgress, this, &Controller::onDisplay );
     connect( downloadThread, &QThread::finished, download, &QObject::deleteLater );
     downloadThread->start();
-    qDebug() << "Thread ID: " << downloadThread->currentThreadId();
+    //qDebug() << "Thread ID: " << downloadThread->currentThreadId();
 }
 
 Controller::~Controller()
 {
-  /*  for( int i = 0; i < m_journal.size(); ++i )
-    {
 
-        m_journal.value( i )->first->quit();
-        m_journal.value( i )->first->wait();
+    for( int i = 0; i < m_journal.size(); ++i )
+    {
         delete m_journal.value( i )->second;
-    }*/
+    }
 }
 
 void Controller::onDisplay()

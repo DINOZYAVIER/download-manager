@@ -13,12 +13,15 @@ Downloader::Downloader( QObject* parent, const QUrl& url, QVariant id ) :
 
 Downloader::~Downloader()
 {
+    delete m_elapsedTimer;
     delete m_manager;
+    qDebug() << "Thread with ID " << QThread::currentThreadId() << "closed";
+    QThread::currentThread()->quit();
 }
 
 void Downloader::doDownload()
 {
-    qDebug() << "Download started. ";
+    qDebug() << "Download started. Current thread ID:" << QThread::currentThreadId();
     m_manager = new QNetworkAccessManager();
     connect( m_manager->get( QNetworkRequest( m_currentUrl ) ), &QNetworkReply::downloadProgress, this, &Downloader::onProcess );
     connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
@@ -106,7 +109,7 @@ void Downloader::downloadFinished( QNetworkReply* reply )
     reply->deleteLater();
 
     // download finished
-    qDebug() << "All downloads finished";
+    qDebug() << "Download finished. Thread ID: " << QThread::currentThreadId();
 }
 
 void Downloader::onProcess( qint64 bytesReceived, qint64 bytesTotal )

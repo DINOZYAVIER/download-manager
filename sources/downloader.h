@@ -18,7 +18,6 @@ public:
     bool saveToDisk( const QString& filename, QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
     QVariantList* dataList() { return &m_dataList; }
-    QNetworkReply* reply() { return m_currentReply; }
 Q_SIGNALS:
     void sendProgress();
 private Q_SLOTS:
@@ -28,7 +27,6 @@ private Q_SLOTS:
 private:
     QNetworkAccessManager* m_manager;
     QVariantList m_dataList;
-    QNetworkReply* m_currentReply;
     QUrl m_currentUrl;
     QElapsedTimer* m_elapsedTimer;
 };
