@@ -15,6 +15,7 @@
 #include <QThread>
 #include <QAbstractEventDispatcher>
 #include <QTimer>
+#include <QFileDialog>
 #endif
 
 #endif // PRECOMPILED_H

@@ -20,6 +20,7 @@ private Q_SLOTS:
     void onResume();
     void onPause();
     void onStop();
+    void onFileOpen();
 
 private:
     Ui::MainWindow*     m_ui;

@@ -20,6 +20,7 @@ MainWindow::MainWindow( QWidget* parent )
     connect( m_ui->aResume, &QAction::triggered, this, &MainWindow::onResume );
     connect( m_ui->aPause, &QAction::triggered, this, &MainWindow::onPause );
     connect( m_ui->aStop, &QAction::triggered, this, &MainWindow::onStop );
+    connect( m_ui->aOpen, &QAction::triggered, this, &MainWindow::onFileOpen );
 
     qDebug() << "Main thread ID:" << QThread::currentThreadId();
 }
@@ -63,4 +64,18 @@ void MainWindow::onStop()
         int id = currentIndex.row();
         m_controller->stop( id );
     }
+}
+
+void MainWindow::onFileOpen()
+{
+    QString fileName = QFileDialog::getOpenFileName( this,
+        tr( "Open text file" ), qApp->applicationDirPath(), tr( "Text Files (*.txt *.rtf)" ) );
+    QFile file( fileName );
+    if( !file.open( QIODevice::ReadOnly | QIODevice::Text ) )
+        return;
+    QTextStream in( &file);
+
+    while ( !in.atEnd() )
+        m_controller->addDownload( in.readLine() );
+    file.close();
 }
