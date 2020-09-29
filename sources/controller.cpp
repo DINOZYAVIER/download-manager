@@ -90,15 +90,15 @@ void Controller::freeResources()
 
 void Controller::resume( int id )
 {
-    qDebug() << "resume( int id )";
+    qDebug() << "resume( int id )" << id;
 }
 
 void Controller::pause( int id )
 {
-    qDebug() << "pause( int id )";
+    qDebug() << "pause( int id )" << id;
 }
 
 void Controller::stop( int id )
 {
-    qDebug() << "stop( int id )";
+    qDebug() << "stop( int id )" << id;
 }

@@ -38,17 +38,32 @@ void MainWindow::onDownload()
 void MainWindow::onResume()
 {
     qDebug() << "onResume";
-    m_controller->resume( 0 );
+    auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
+    if( currentIndex.isValid() )
+    {
+        int id = currentIndex.row();
+        m_controller->resume( id );
+    }
 }
 
 void MainWindow::onPause()
 {
     qDebug() << "onPause";
-    m_controller->pause( 0 );
+    auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
+    if( currentIndex.isValid() )
+    {
+        int id = currentIndex.row();
+        m_controller->pause( id );
+    }
 }
 
 void MainWindow::onStop()
 {
     qDebug() << "onStop";
-    m_controller->stop( 0 );
+    auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
+    if( currentIndex.isValid() )
+    {
+        int id = currentIndex.row();
+        m_controller->stop( id );
+    }
 }
