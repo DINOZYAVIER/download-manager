@@ -13,6 +13,8 @@ public:
     explicit Downloader( const QUrl& url );
     ~Downloader();
 
+    QNetworkReply* reply() { return m_reply; }
+
     Q_SLOT void doDownload();
 
     bool saveToDisk( const QString& filename, QIODevice* data );
