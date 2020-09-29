@@ -90,7 +90,7 @@ void Controller::freeResources()
 
 void Controller::resume( int id )
 {
-    qDebug() << "resume( int id )" << id;
+    m_journal[ id ].downloader->resume();
 }
 
 void Controller::pause( int id )

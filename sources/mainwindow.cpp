@@ -37,7 +37,6 @@ void MainWindow::onDownload()
 
 void MainWindow::onResume()
 {
-    qDebug() << "onResume";
     auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
     if( currentIndex.isValid() )
     {
@@ -48,7 +47,6 @@ void MainWindow::onResume()
 
 void MainWindow::onPause()
 {
-    qDebug() << "onPause";
     auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
     if( currentIndex.isValid() )
     {
@@ -59,7 +57,6 @@ void MainWindow::onPause()
 
 void MainWindow::onStop()
 {
-    qDebug() << "onStop";
     auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
     if( currentIndex.isValid() )
     {

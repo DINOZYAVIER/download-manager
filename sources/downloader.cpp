@@ -9,6 +9,7 @@ Downloader::Downloader( const QUrl& url ) :
     m_thread( nullptr )
 {
     m_file.setFileName( saveFileName( url ) );
+    checkFileLocation();
 }
 
 Downloader::~Downloader()
@@ -53,30 +54,28 @@ bool Downloader::saveToDisk( QIODevice* data )
     QMutex fileMutex;
     fileMutex.lock();
 
-    if( QFile::exists( m_file.fileName() ) )
-    {
-        // already exists, don't overwrite
-        int i = 0;
-        m_file.setFileName( m_file.fileName() + '_' );
-        while( QFile::exists( m_file.fileName() + QString::number( i ) ) )
-            ++i;
+    if( !m_file.isOpen() )
+        {
+        checkFileLocation();
+        if( !m_file.open( QIODevice::ReadWrite ) )
+        {
+            qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+            fileMutex.unlock();
+            return false;
+        }
 
-        m_file.setFileName( m_file.fileName() + QString::number( i ) );
-    }
-
-    if( !m_file.open( QIODevice::WriteOnly ) )
-    {
-        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+        m_file.write( data->readAll() );
+        m_file.close();
         fileMutex.unlock();
-        return false;
+        return true;
     }
-
-    m_file.write( data->readAll() );
-    m_file.close();
-    fileMutex.unlock();
-
-
-    return true;
+    else
+    {
+        m_file.write( data->readAll() );
+        m_file.close();
+        fileMutex.unlock();
+        return true;
+    }
 }
 
 bool Downloader::isHttpRedirect( QNetworkReply* reply )
@@ -111,7 +110,6 @@ void Downloader::onFinished()
                 qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
         }
     }
-
     Q_EMIT finished();
 }
 
@@ -162,12 +160,23 @@ void Downloader::pause()
     disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
     m_reply->abort();
-    m_file.open (QIODevice::ReadOnly);
-    if( saveToDisk( m_reply ) )
-        qDebug() << "Download of" << m_url.toEncoded().constData() << "has been paused and temporary file is" << qPrintable( m_file.fileName() );
-    m_file.write( m_reply->readAll());
-    m_file.close();
+    m_reply->open( QIODevice::ReadWrite );
+    m_file.open( QIODevice::ReadWrite );
     m_reply = 0;
+}
+
+void Downloader::checkFileLocation()
+{
+    if( QFile::exists( m_file.fileName() ) )
+    {
+        // already exists, don't overwrite
+        int i = 0;
+        m_file.setFileName( m_file.fileName() + '_' );
+        while( QFile::exists( m_file.fileName() + QString::number( i ) ) )
+            ++i;
+
+        m_file.setFileName( m_file.fileName() + QString::number( i ) );
+    }
 }
 
 

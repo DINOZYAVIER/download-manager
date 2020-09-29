@@ -22,6 +22,7 @@ public:
     static bool isHttpRedirect( QNetworkReply* reply );
     void resume();
     void pause();
+    void checkFileLocation();
 
 Q_SIGNALS:
     void progressChanged( QVariantList data );
