@@ -16,6 +16,8 @@ public:
     ~MainWindow();
 
     void setDownloadDir( QString path );
+    void loadSettings();
+    void saveSettings();
 
 private Q_SLOTS:
     void onDownload();
@@ -29,5 +31,6 @@ private:
     Ui::MainWindow*     m_ui;
     DownloadTableModel* m_downloadTableModel;
     Controller*         m_controller;
+    QString             m_downloadDir;
 };
 #endif // MAINWINDOW_H

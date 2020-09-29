@@ -12,6 +12,8 @@ MainWindow::MainWindow( QWidget* parent )
     m_ui->setupUi( this );
     m_downloadTableModel = new DownloadTableModel( this );
     m_controller = new Controller( *m_downloadTableModel, this );
+    loadSettings();
+
 
     m_ui->downloadTableView->setModel( m_downloadTableModel );
     m_ui->downloadTableView->resizeRowsToContents();
@@ -29,6 +31,27 @@ MainWindow::MainWindow( QWidget* parent )
 MainWindow::~MainWindow()
 {
     delete m_ui;
+    saveSettings();
+}
+
+void MainWindow::loadSettings()
+{
+    //here we load settings
+    QSettings settings( QStandardPaths::displayName (QStandardPaths::AppDataLocation) + "/download_manager.ini",
+                        QSettings::IniFormat );
+    settings.beginGroup( "MainWindow" );
+    m_downloadDir = settings.value( "dir", qApp->applicationDirPath() + '/' ).toString();
+    m_controller->setDownloadPath( m_downloadDir );
+    settings.endGroup();
+}
+void MainWindow::saveSettings()
+{
+    //here we save settings
+    QSettings settings( QStandardPaths::displayName (QStandardPaths::AppDataLocation) + "/download_manager.ini",
+                        QSettings::IniFormat);
+    settings.beginGroup( "MainWindow" );
+    settings.setValue( "dir", m_downloadDir );
+    settings.endGroup();
 }
 
 void MainWindow::onDownload()
@@ -83,9 +106,9 @@ void MainWindow::onFileOpen()
 
 void MainWindow::onGetDownloadDir()
 {
-    QString downloadPath = QFileDialog::getOpenFileName( this,
-        tr( "Open text file" ), qApp->applicationDirPath() );
-    setDownloadDir( downloadPath );
+    m_downloadDir = QFileDialog::getExistingDirectory( this,
+        tr( "Open text file" ), qApp->applicationDirPath() ) + '/';
+    setDownloadDir( m_downloadDir );
 }
 
 void MainWindow::setDownloadDir( QString path )

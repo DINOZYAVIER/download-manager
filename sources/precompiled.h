@@ -16,6 +16,8 @@
 #include <QAbstractEventDispatcher>
 #include <QTimer>
 #include <QFileDialog>
+#include <QSettings>
+#include <QStandardPaths>
 #endif
 
 #endif // PRECOMPILED_H
