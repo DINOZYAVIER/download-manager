@@ -8,7 +8,7 @@ Downloader::Downloader( const QUrl& url ) :
     m_elapsedTimer( nullptr ),
     m_thread( nullptr )
 {
-    m_file = saveFileName( m_url );
+    m_file.setFileName( saveFileName( url ) );
 }
 
 Downloader::~Downloader()
@@ -91,8 +91,8 @@ void Downloader::onFinished()
             qDebug() << "Request was redirected.\n";
         else
         {
-            if( saveToDisk( m_file, m_reply ) )
-                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file ) << ')';
+            if( saveToDisk( m_file.fileName(), m_reply ) )
+                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
         }
     }
 
@@ -102,7 +102,7 @@ void Downloader::onFinished()
 void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
     QVariantList data;
-    data.append( m_file );
+    data.append( m_file.fileName() );
     data.append( QString::number( bytesTotal / 1048576 ) + "MB" );
     data.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
     data.append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
@@ -130,4 +130,26 @@ QString Downloader::saveFileName( const QUrl& url )
 
     return basename;
 }
+
+void Downloader::resume()
+{
+
+}
+
+void Downloader::pause()
+{
+    if( m_reply == 0 )
+    {
+        return;
+    }
+    disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+    disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+    disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+
+    m_reply->abort();
+    m_file.write( m_reply->readAll() );
+    m_reply = 0;
+}
+
 

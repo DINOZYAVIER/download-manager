@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QNetworkReply>
+#include <QFile>
 
 class QElapsedTimer;
 
@@ -19,6 +20,8 @@ public:
 
     bool saveToDisk( const QString& filename, QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
+    void resume();
+    void pause();
 
 Q_SIGNALS:
     void progressChanged( QVariantList data );
@@ -32,7 +35,7 @@ private Q_SLOTS:
 
 private:
     QUrl           m_url;
-    QString        m_file;
+    QFile          m_file;
     QNetworkReply* m_reply;
     QElapsedTimer* m_elapsedTimer;
     QThread*       m_thread;
