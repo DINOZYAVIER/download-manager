@@ -7,9 +7,11 @@ Downloader::Downloader( const QUrl& url, QString path ) :
     m_reply( nullptr ),
     m_elapsedTimer( nullptr ),
     m_thread( nullptr ),
-    m_downloadDir( path )
+    m_downloadDir( path ),
+    m_pauseFlag( false )
 {
     m_file.setFileName( m_downloadDir + saveFileName( url ) );
+    checkFileLocation();
 }
 
 Downloader::~Downloader()
@@ -57,29 +59,20 @@ bool Downloader::saveToDisk( QIODevice* data )
     QMutex fileMutex;
     fileMutex.lock();
 
-    if( m_file.isOpen() )
-    {
-        checkFileLocation();
-        m_file.write( data->readAll() );
-        m_file.close();
-        fileMutex.unlock();
-        return true;
-    }
-    else
-    {
-        checkFileLocation();
-        if( !m_file.open( QIODevice::ReadWrite ) )
-        {
-            qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
-            fileMutex.unlock();
-            return false;
-        }
 
-        m_file.write( data->readAll() );
-        m_file.close();
+    checkFileLocation();
+    if( !m_file.open( QIODevice::ReadWrite ) )
+    {
+        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
         fileMutex.unlock();
-        return true;
+        return false;
     }
+
+    m_file.write( data->readAll() );
+    m_file.close();
+    fileMutex.unlock();
+    return true;
+
 }
 
 bool Downloader::isHttpRedirect( QNetworkReply* reply )
@@ -169,13 +162,15 @@ void Downloader::pause()
     m_reply->open( QIODevice::ReadWrite );
     m_file.open( QIODevice::ReadWrite );
     m_file.write( m_reply->readAll() );
+    m_file.close();
+    m_pauseFlag = true;
     fileMutex.unlock();
     m_reply = 0;
 }
 
 void Downloader::checkFileLocation()
 {
-    if( QFile::exists( m_file.fileName() ) )
+    if( QFile::exists( m_file.fileName() ) && m_pauseFlag == false)
     {
         // already exists, don't overwrite
         int i = 0;

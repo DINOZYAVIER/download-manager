@@ -35,14 +35,15 @@ private Q_SLOTS:
     void onSSLError( const QList<QSslError>& errors );
 
 private:
-    QUrl           m_url;
-    QFile          m_file;
-    QNetworkReply* m_reply;
-    QElapsedTimer* m_elapsedTimer;
-    QThread*       m_thread;
+    QUrl                   m_url;
+    QFile                  m_file;
+    QNetworkReply*         m_reply;
     QNetworkAccessManager* m_manager;
-    QNetworkRequest* m_request;
-    QString        m_downloadDir;
+    QNetworkRequest*       m_request;
+    QElapsedTimer*         m_elapsedTimer;
+    QThread*               m_thread;
+    QString                m_downloadDir;
+    bool                   m_pauseFlag;
 
     static QString saveFileName( const QUrl& url );
 };
