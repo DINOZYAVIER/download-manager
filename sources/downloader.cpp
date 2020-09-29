@@ -36,8 +36,8 @@ void Downloader::doDownload()
     qDebug() << "Starting download" << m_url;
     qDebug() << "Thread ID" << QThread::currentThreadId();
 
-    auto* manager = new QNetworkAccessManager( this );
-    m_reply = manager->get( QNetworkRequest( m_url ) );
+    m_manager = new QNetworkAccessManager( this );
+    m_reply = m_manager->get( QNetworkRequest( m_url ) );
 
     m_elapsedTimer = new QElapsedTimer();
     m_elapsedTimer->start();
@@ -52,16 +52,9 @@ bool Downloader::saveToDisk( QIODevice* data )
 {
     QMutex fileMutex;
     fileMutex.lock();
-    if( !m_file.open( QIODevice::WriteOnly ) )
-    {
-        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
-        fileMutex.unlock();
-        return false;
-    }
 
     if( QFile::exists( m_file.fileName() ) )
     {
-        m_file.close();
         // already exists, don't overwrite
         int i = 0;
         m_file.setFileName( m_file.fileName() + '_' );
@@ -69,12 +62,13 @@ bool Downloader::saveToDisk( QIODevice* data )
             ++i;
 
         m_file.setFileName( m_file.fileName() + QString::number( i ) );
-        if( !m_file.open( QIODevice::WriteOnly ) )
-        {
-            qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
-            fileMutex.unlock();
-            return false;
-        }
+    }
+
+    if( !m_file.open( QIODevice::WriteOnly ) )
+    {
+        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+        fileMutex.unlock();
+        return false;
     }
 
     m_file.write( data->readAll() );
@@ -142,16 +136,25 @@ QString Downloader::saveFileName( const QUrl& url )
     return basename;
 }
 
-bool Downloader::resume()
+void Downloader::resume()
 {
+    auto DownloadSizeAtPause = m_file.size();
+    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( DownloadSizeAtPause ) + "-";
+    QNetworkRequest( m_url ).setRawHeader( "Range",rangeHeaderValue );
 
+    m_reply = m_manager->get( QNetworkRequest( m_url ) );
+
+    connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+    connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+    connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 }
 
-bool Downloader::pause()
+void Downloader::pause()
 {
     if( m_reply == 0 )
     {
-        return false;
+        return;
     }
     disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
     disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
@@ -159,10 +162,12 @@ bool Downloader::pause()
     disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
     m_reply->abort();
+    m_file.open (QIODevice::ReadOnly);
     if( saveToDisk( m_reply ) )
         qDebug() << "Download of" << m_url.toEncoded().constData() << "has been paused and temporary file is" << qPrintable( m_file.fileName() );
+    m_file.write( m_reply->readAll());
+    m_file.close();
     m_reply = 0;
-    return true;
 }
 
 

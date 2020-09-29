@@ -20,8 +20,8 @@ public:
 
     bool saveToDisk( QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
-    bool resume();
-    bool pause();
+    void resume();
+    void pause();
 
 Q_SIGNALS:
     void progressChanged( QVariantList data );
@@ -39,6 +39,7 @@ private:
     QNetworkReply* m_reply;
     QElapsedTimer* m_elapsedTimer;
     QThread*       m_thread;
+    QNetworkAccessManager* m_manager;
 
     static QString saveFileName( const QUrl& url );
 };
