@@ -48,17 +48,39 @@ void Downloader::doDownload()
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 }
 
-bool Downloader::saveToDisk( const QString& filename, QIODevice* data )
+bool Downloader::saveToDisk( QIODevice* data )
 {
-    QFile file( filename );
-    if( !file.open( QIODevice::WriteOnly ) )
+    QMutex fileMutex;
+    fileMutex.lock();
+    if( !m_file.open( QIODevice::WriteOnly ) )
     {
-        qDebug() << "Could not open" << qPrintable( filename ) << "for writing" << qPrintable( file.errorString() );
+        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+        fileMutex.unlock();
         return false;
     }
 
-    file.write( data->readAll() );
-    file.close();
+    if( QFile::exists( m_file.fileName() ) )
+    {
+        m_file.close();
+        // already exists, don't overwrite
+        int i = 0;
+        m_file.setFileName( m_file.fileName() + '_' );
+        while( QFile::exists( m_file.fileName() + QString::number( i ) ) )
+            ++i;
+
+        m_file.setFileName( m_file.fileName() + QString::number( i ) );
+        if( !m_file.open( QIODevice::WriteOnly ) )
+        {
+            qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+            fileMutex.unlock();
+            return false;
+        }
+    }
+
+    m_file.write( data->readAll() );
+    m_file.close();
+    fileMutex.unlock();
+
 
     return true;
 }
@@ -91,7 +113,7 @@ void Downloader::onFinished()
             qDebug() << "Request was redirected.\n";
         else
         {
-            if( saveToDisk( m_file.fileName(), m_reply ) )
+            if( saveToDisk( m_reply ) )
                 qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
         }
     }
@@ -117,17 +139,6 @@ QString Downloader::saveFileName( const QUrl& url )
     if( basename.isEmpty() )
         basename = "download";
 
-    if( QFile::exists( basename ) )
-    {
-        // already exists, don't overwrite
-        int i = 0;
-        basename += '_';
-        while( QFile::exists( basename + QString::number( i ) ) )
-            ++i;
-
-        basename += QString::number( i );
-    }
-
     return basename;
 }
 
@@ -138,18 +149,7 @@ void Downloader::resume()
 
 void Downloader::pause()
 {
-    if( m_reply == 0 )
-    {
-        return;
-    }
-    disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
-    disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-    disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
-    disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
-    m_reply->abort();
-    m_file.write( m_reply->readAll() );
-    m_reply = 0;
 }
 
 

@@ -18,7 +18,7 @@ public:
 
     Q_SLOT void doDownload();
 
-    bool saveToDisk( const QString& filename, QIODevice* data );
+    bool saveToDisk( QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
     void resume();
     void pause();
