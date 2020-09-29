@@ -21,6 +21,7 @@ MainWindow::MainWindow( QWidget* parent )
     connect( m_ui->aPause, &QAction::triggered, this, &MainWindow::onPause );
     connect( m_ui->aStop, &QAction::triggered, this, &MainWindow::onStop );
     connect( m_ui->aOpen, &QAction::triggered, this, &MainWindow::onFileOpen );
+    connect( m_ui->aSetDownloadDir, &QAction::triggered, this, &MainWindow::onGetDownloadDir );
 
     qDebug() << "Main thread ID:" << QThread::currentThreadId();
 }
@@ -78,4 +79,16 @@ void MainWindow::onFileOpen()
     while ( !in.atEnd() )
         m_controller->addDownload( in.readLine() );
     file.close();
+}
+
+void MainWindow::onGetDownloadDir()
+{
+    QString downloadPath = QFileDialog::getOpenFileName( this,
+        tr( "Open text file" ), qApp->applicationDirPath() );
+    setDownloadDir( downloadPath );
+}
+
+void MainWindow::setDownloadDir( QString path )
+{
+    m_controller->setDownloadPath( path );
 }

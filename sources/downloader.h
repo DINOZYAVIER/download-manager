@@ -11,7 +11,7 @@ class Downloader : public QObject
 {
     Q_OBJECT
 public:
-    explicit Downloader( const QUrl& url );
+    explicit Downloader( const QUrl& url, QString path );
     ~Downloader();
 
     QNetworkReply* reply() { return m_reply; }
@@ -41,6 +41,8 @@ private:
     QElapsedTimer* m_elapsedTimer;
     QThread*       m_thread;
     QNetworkAccessManager* m_manager;
+    QNetworkRequest* m_request;
+    QString        m_downloadDir;
 
     static QString saveFileName( const QUrl& url );
 };

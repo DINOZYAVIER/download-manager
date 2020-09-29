@@ -104,7 +104,14 @@
     </property>
     <addaction name="aOpen"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="aSetDownloadDir"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -139,6 +146,11 @@
   <action name="aOpen">
    <property name="text">
     <string>Open</string>
+   </property>
+  </action>
+  <action name="aSetDownloadDir">
+   <property name="text">
+    <string>Set download folder</string>
    </property>
   </action>
  </widget>

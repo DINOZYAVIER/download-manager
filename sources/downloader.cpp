@@ -1,15 +1,15 @@
 #include "precompiled.h"
 #include "downloader.h"
 
-Downloader::Downloader( const QUrl& url ) :
+Downloader::Downloader( const QUrl& url, QString path ) :
     QObject( nullptr ),
     m_url( url ),
     m_reply( nullptr ),
     m_elapsedTimer( nullptr ),
-    m_thread( nullptr )
+    m_thread( nullptr ),
+    m_downloadDir( path )
 {
-    m_file.setFileName( saveFileName( url ) );
-    checkFileLocation();
+    m_file.setFileName( m_downloadDir + saveFileName( url ) );
 }
 
 Downloader::~Downloader()
@@ -30,6 +30,8 @@ Downloader::~Downloader()
         m_elapsedTimer->invalidate();
         delete m_elapsedTimer;
     }
+
+    delete m_request;
 }
 
 void Downloader::doDownload()
@@ -38,6 +40,7 @@ void Downloader::doDownload()
     qDebug() << "Thread ID" << QThread::currentThreadId();
 
     m_manager = new QNetworkAccessManager( this );
+    m_request = new QNetworkRequest( m_url );
     m_reply = m_manager->get( QNetworkRequest( m_url ) );
 
     m_elapsedTimer = new QElapsedTimer();
@@ -54,8 +57,16 @@ bool Downloader::saveToDisk( QIODevice* data )
     QMutex fileMutex;
     fileMutex.lock();
 
-    if( !m_file.isOpen() )
-        {
+    if( m_file.isOpen() )
+    {
+        checkFileLocation();
+        m_file.write( data->readAll() );
+        m_file.close();
+        fileMutex.unlock();
+        return true;
+    }
+    else
+    {
         checkFileLocation();
         if( !m_file.open( QIODevice::ReadWrite ) )
         {
@@ -64,13 +75,6 @@ bool Downloader::saveToDisk( QIODevice* data )
             return false;
         }
 
-        m_file.write( data->readAll() );
-        m_file.close();
-        fileMutex.unlock();
-        return true;
-    }
-    else
-    {
         m_file.write( data->readAll() );
         m_file.close();
         fileMutex.unlock();
@@ -138,9 +142,9 @@ void Downloader::resume()
 {
     auto DownloadSizeAtPause = m_file.size();
     QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( DownloadSizeAtPause ) + "-";
-    QNetworkRequest( m_url ).setRawHeader( "Range",rangeHeaderValue );
+    m_request->setRawHeader( "Range", rangeHeaderValue );
 
-    m_reply = m_manager->get( QNetworkRequest( m_url ) );
+    m_reply = m_manager->get( *m_request );
 
     connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
@@ -160,8 +164,12 @@ void Downloader::pause()
     disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
     m_reply->abort();
+    QMutex fileMutex;
+    fileMutex.lock();
     m_reply->open( QIODevice::ReadWrite );
     m_file.open( QIODevice::ReadWrite );
+    m_file.write( m_reply->readAll() );
+    fileMutex.unlock();
     m_reply = 0;
 }
 

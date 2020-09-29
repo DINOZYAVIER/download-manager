@@ -7,16 +7,17 @@
 #define INVALID_INDEX -1
 #endif
 
-Controller::Controller( DownloadTableModel& model, QObject* parent ) :
+Controller::Controller( DownloadTableModel& model, QObject* parent) :
     QObject( parent ),
     m_model( model )
 {
+    m_downloadPath = qApp->applicationDirPath() + '/';
 }
 
 void Controller::addDownload( QUrl url )
 {
     QThread* downloadThread = new QThread();
-    Downloader* downloader = new Downloader( url );
+    Downloader* downloader = new Downloader( url, m_downloadPath );
     downloader->moveToThread( downloadThread );
     m_journal.append( JournalItem( downloader, downloadThread ) );
 
@@ -37,7 +38,7 @@ int Controller::findDownloader( QObject* downloader )
 {
     for( int i = 0; i < m_journal.size(); ++i )
     {
-        if( m_journal.at(i).downloader == downloader )
+        if( m_journal.at( i ).downloader == downloader )
             return i;
     }
     return INVALID_INDEX;
@@ -47,7 +48,7 @@ void Controller::removeItem( int index )
 {
     if( index >= m_journal.size() )
         return;
-    releaseItem( m_journal[index] );
+    releaseItem( m_journal[ index ] );
     m_journal.removeAt( index );
     // TODO: Remove row from table
 }

@@ -26,10 +26,12 @@ public:
     void resume( int id );
     void pause( int id );
     void stop( int id );
+    void setDownloadPath( QString path ) { m_downloadPath = path; }
 
 private:
     DownloadTableModel& m_model;
     QList<JournalItem>  m_journal;
+    QString m_downloadPath;
 
     int findDownloader( QObject* downloader );
     void removeItem( int index );

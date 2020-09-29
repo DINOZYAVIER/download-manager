@@ -15,12 +15,15 @@ public:
     MainWindow( QWidget* parent = nullptr );
     ~MainWindow();
 
+    void setDownloadDir( QString path );
+
 private Q_SLOTS:
     void onDownload();
     void onResume();
     void onPause();
     void onStop();
     void onFileOpen();
+    void onGetDownloadDir();
 
 private:
     Ui::MainWindow*     m_ui;
