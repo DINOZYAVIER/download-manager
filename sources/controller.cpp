@@ -87,3 +87,18 @@ void Controller::freeResources()
             releaseItem( m_journal[ index ] );
     }
 }
+
+void Controller::resume( int id )
+{
+    qDebug() << "resume( int id )";
+}
+
+void Controller::pause( int id )
+{
+    qDebug() << "pause( int id )";
+}
+
+void Controller::stop( int id )
+{
+    qDebug() << "stop( int id )";
+}

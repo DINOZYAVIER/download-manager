@@ -23,6 +23,9 @@ public:
     Controller( DownloadTableModel& model, QObject* parent = nullptr );
     ~Controller();
     void addDownload( QUrl url );
+    void resume( int id );
+    void pause( int id );
+    void stop( int id );
 
 private:
     DownloadTableModel& m_model;

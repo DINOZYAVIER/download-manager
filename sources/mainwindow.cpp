@@ -17,6 +17,10 @@ MainWindow::MainWindow( QWidget* parent )
     m_ui->downloadTableView->resizeRowsToContents();
 
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
+    connect( m_ui->aResume, &QAction::triggered, this, &MainWindow::onResume );
+    connect( m_ui->aPause, &QAction::triggered, this, &MainWindow::onPause );
+    connect( m_ui->aStop, &QAction::triggered, this, &MainWindow::onStop );
+
     qDebug() << "Main thread ID:" << QThread::currentThreadId();
 }
 
@@ -29,4 +33,22 @@ void MainWindow::onDownload()
 {
     QUrl url = QUrl::fromEncoded( m_ui->PathEdit->text().toLocal8Bit() );
     m_controller->addDownload( url );
+}
+
+void MainWindow::onResume()
+{
+    qDebug() << "onResume";
+    m_controller->resume( 0 );
+}
+
+void MainWindow::onPause()
+{
+    qDebug() << "onPause";
+    m_controller->pause( 0 );
+}
+
+void MainWindow::onStop()
+{
+    qDebug() << "onStop";
+    m_controller->stop( 0 );
 }

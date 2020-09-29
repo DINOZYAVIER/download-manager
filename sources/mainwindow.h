@@ -17,6 +17,9 @@ public:
 
 private Q_SLOTS:
     void onDownload();
+    void onResume();
+    void onPause();
+    void onStop();
 
 private:
     Ui::MainWindow*     m_ui;
