@@ -101,4 +101,7 @@ void Controller::pause( int id )
 void Controller::stop( int id )
 {
     qDebug() << "stop( int id )" << id;
+    releaseItem( m_journal[ id ] );
+    removeItem( id );
+    m_model.removeDownload( id );
 }

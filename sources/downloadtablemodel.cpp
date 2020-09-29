@@ -76,5 +76,14 @@ void DownloadTableModel::setDataList( QVariantList dataList, int number )
     }
 }
 
+void DownloadTableModel::removeDownload( int id )
+{
+    if( id >= m_data.size() )
+        return;
+    beginRemoveRows( QModelIndex(), id, id );
+    m_data.removeAt( id );
+    endRemoveRows();
+    Q_EMIT dataChanged( index( id, 0 ), index( id, NUMBER_OF_COLUMNS - 1 ) );
+}
 
 
