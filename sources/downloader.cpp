@@ -142,14 +142,27 @@ QString Downloader::saveFileName( const QUrl& url )
     return basename;
 }
 
-void Downloader::resume()
+bool Downloader::resume()
 {
 
 }
 
-void Downloader::pause()
+bool Downloader::pause()
 {
+    if( m_reply == 0 )
+    {
+        return false;
+    }
+    disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+    disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+    disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
+    m_reply->abort();
+    if( saveToDisk( m_reply ) )
+        qDebug() << "Download of" << m_url.toEncoded().constData() << "has been paused and temporary file is" << qPrintable( m_file.fileName() );
+    m_reply = 0;
+    return true;
 }
 
 

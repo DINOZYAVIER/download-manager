@@ -95,12 +95,11 @@ void Controller::resume( int id )
 
 void Controller::pause( int id )
 {
-    qDebug() << "pause( int id )" << id;
+    m_journal[ id ].downloader->pause();
 }
 
 void Controller::stop( int id )
 {
-    qDebug() << "stop( int id )" << id;
     releaseItem( m_journal[ id ] );
     removeItem( id );
     m_model.removeDownload( id );

@@ -20,8 +20,8 @@ public:
 
     bool saveToDisk( QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
-    void resume();
-    void pause();
+    bool resume();
+    bool pause();
 
 Q_SIGNALS:
     void progressChanged( QVariantList data );
