@@ -17,22 +17,25 @@ public:
     QNetworkReply* reply() { return m_reply; }
 
     Q_SLOT void doDownload();
+    Q_SLOT void resume();
+    Q_SLOT void pause();
 
     bool saveToDisk( QIODevice* data );
     static bool isHttpRedirect( QNetworkReply* reply );
-    void resume();
-    void pause();
     void checkFileLocation();
 
 Q_SIGNALS:
     void progressChanged( QVariantList data );
     void finished();
+    void resumeSignal();
+    void pauseSignal();
 
 private Q_SLOTS:
     void onProgress( qint64 bytesReceived, qint64 bytesTotal );
     void onFinished();
     void onError( QNetworkReply::NetworkError code );
     void onSSLError( const QList<QSslError>& errors );
+
 
 private:
     QUrl                   m_url;

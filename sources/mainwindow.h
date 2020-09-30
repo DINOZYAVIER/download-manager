@@ -23,7 +23,7 @@ private Q_SLOTS:
     void onDownload();
     void onResume();
     void onPause();
-    void onStop();
+    void onRemove();
     void onFileOpen();
     void onGetDownloadDir();
 

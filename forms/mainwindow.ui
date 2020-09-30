@@ -126,7 +126,7 @@
    </attribute>
    <addaction name="aResume"/>
    <addaction name="aPause"/>
-   <addaction name="aStop"/>
+   <addaction name="aRemove"/>
   </widget>
   <action name="aResume">
    <property name="text">
@@ -138,9 +138,9 @@
     <string>Pause</string>
    </property>
   </action>
-  <action name="aStop">
+  <action name="aRemove">
    <property name="text">
-    <string>Stop</string>
+    <string>Remove</string>
    </property>
   </action>
   <action name="aOpen">

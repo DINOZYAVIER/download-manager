@@ -23,11 +23,9 @@ public:
     Controller( DownloadTableModel& model, QObject* parent = nullptr );
     ~Controller();
     void addDownload( QUrl url );
-    void resume( int id );
-    void pause( int id );
-    void stop( int id );
+    void removeDownload( int id );
     void setDownloadPath( QString path ) { m_downloadPath = path; }
-
+    Downloader* downloader( int id ) { return m_journal[ id ].downloader; }
 private:
     DownloadTableModel& m_model;
     QList<JournalItem>  m_journal;
@@ -39,6 +37,7 @@ private:
 
     Q_SLOT void displayData( QVariantList data );
     Q_SLOT void freeResources();
+
 };
 
 #endif // CONTROLLER_H

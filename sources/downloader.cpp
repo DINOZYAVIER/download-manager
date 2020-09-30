@@ -12,6 +12,8 @@ Downloader::Downloader( const QUrl& url, QString path ) :
 {
     m_file.setFileName( m_downloadDir + saveFileName( url ) );
     checkFileLocation();
+    m_manager = new QNetworkAccessManager( this );
+    m_request = new QNetworkRequest( m_url );
 }
 
 Downloader::~Downloader()
@@ -20,6 +22,8 @@ Downloader::~Downloader()
     {
         if( m_reply->isRunning() )
         {
+            if( m_pauseFlag == true )
+                m_file.close();
             m_reply->abort();
             m_reply->close();
             // TODO Delete file
@@ -41,17 +45,22 @@ void Downloader::doDownload()
     qDebug() << "Starting download" << m_url;
     qDebug() << "Thread ID" << QThread::currentThreadId();
 
-    m_manager = new QNetworkAccessManager( this );
-    m_request = new QNetworkRequest( m_url );
-    m_reply = m_manager->get( QNetworkRequest( m_url ) );
 
-    m_elapsedTimer = new QElapsedTimer();
-    m_elapsedTimer->start();
+    m_reply = m_manager->get( *m_request );
+
+    if( m_elapsedTimer )
+        m_elapsedTimer->restart();
+    else
+    {
+        m_elapsedTimer = new QElapsedTimer();
+        m_elapsedTimer->start();
+    }
 
     connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
     connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+    m_reply->open( QIODevice::ReadWrite );
 }
 
 bool Downloader::saveToDisk( QIODevice* data )
@@ -59,20 +68,28 @@ bool Downloader::saveToDisk( QIODevice* data )
     QMutex fileMutex;
     fileMutex.lock();
 
-
     checkFileLocation();
-    if( !m_file.open( QIODevice::ReadWrite ) )
+    if( m_pauseFlag == false )
     {
-        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+        if( !m_file.open( QIODevice::ReadWrite ) )
+        {
+            qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+            fileMutex.unlock();
+            return false;
+        }
+
+        m_file.write( data->readAll() );
+        m_file.close();
         fileMutex.unlock();
-        return false;
+        return true;
     }
-
-    m_file.write( data->readAll() );
-    m_file.close();
-    fileMutex.unlock();
-    return true;
-
+    else
+    {
+        m_file.write( data->readAll() );
+        m_file.close();
+        fileMutex.unlock();
+        return true;
+    }
 }
 
 bool Downloader::isHttpRedirect( QNetworkReply* reply )
@@ -134,19 +151,17 @@ QString Downloader::saveFileName( const QUrl& url )
 void Downloader::resume()
 {
     auto DownloadSizeAtPause = m_file.size();
-    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( DownloadSizeAtPause ) + "-";
+    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( DownloadSizeAtPause ) + '-';
+    qDebug() << m_request->rawHeader( "Range" );
     m_request->setRawHeader( "Range", rangeHeaderValue );
+    qDebug() << m_request->rawHeader( "Range" );
 
-    m_reply = m_manager->get( *m_request );
-
-    connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
-    connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-    connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
-    connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+    doDownload();
 }
 
 void Downloader::pause()
 {
+    QMutex mutex;
     if( m_reply == 0 )
     {
         return;
@@ -157,14 +172,17 @@ void Downloader::pause()
     disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
     m_reply->abort();
-    QMutex fileMutex;
-    fileMutex.lock();
     m_reply->open( QIODevice::ReadWrite );
-    m_file.open( QIODevice::ReadWrite );
+
+    mutex.lock();
+    if( !m_file.isOpen() )
+        m_file.open( QIODevice::ReadWrite );
     m_file.write( m_reply->readAll() );
-    m_file.close();
+    mutex.unlock();
+
+    qDebug() << m_file.size();
+
     m_pauseFlag = true;
-    fileMutex.unlock();
     m_reply = 0;
 }
 

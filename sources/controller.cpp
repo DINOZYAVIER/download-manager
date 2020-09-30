@@ -22,6 +22,8 @@ void Controller::addDownload( QUrl url )
     m_journal.append( JournalItem( downloader, downloadThread ) );
 
     connect( downloadThread, &QThread::started, downloader, &Downloader::doDownload );
+    connect( downloader, &Downloader::resumeSignal, downloader, &Downloader::resume );
+    connect( downloader, &Downloader::pauseSignal, downloader, &Downloader::pause );
     connect( downloader, &Downloader::progressChanged, this, &Controller::displayData );
     connect( downloader, &Downloader::finished, this, &Controller::freeResources );
     connect( downloadThread, &QThread::finished, downloader, &Downloader::deleteLater );
@@ -89,17 +91,7 @@ void Controller::freeResources()
     }
 }
 
-void Controller::resume( int id )
-{
-    m_journal[ id ].downloader->resume();
-}
-
-void Controller::pause( int id )
-{
-    m_journal[ id ].downloader->pause();
-}
-
-void Controller::stop( int id )
+void Controller::removeDownload( int id )
 {
     releaseItem( m_journal[ id ] );
     removeItem( id );

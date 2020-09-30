@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "controller.h"
+#include "downloader.h"
 #include "downloadtablemodel.h"
 
 MainWindow::MainWindow( QWidget* parent )
@@ -14,14 +15,13 @@ MainWindow::MainWindow( QWidget* parent )
     m_controller = new Controller( *m_downloadTableModel, this );
     loadSettings();
 
-
     m_ui->downloadTableView->setModel( m_downloadTableModel );
     m_ui->downloadTableView->resizeRowsToContents();
 
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
     connect( m_ui->aResume, &QAction::triggered, this, &MainWindow::onResume );
     connect( m_ui->aPause, &QAction::triggered, this, &MainWindow::onPause );
-    connect( m_ui->aStop, &QAction::triggered, this, &MainWindow::onStop );
+    connect( m_ui->aRemove, &QAction::triggered, this, &MainWindow::onRemove );
     connect( m_ui->aOpen, &QAction::triggered, this, &MainWindow::onFileOpen );
     connect( m_ui->aSetDownloadDir, &QAction::triggered, this, &MainWindow::onGetDownloadDir );
 
@@ -66,7 +66,7 @@ void MainWindow::onResume()
     if( currentIndex.isValid() )
     {
         int id = currentIndex.row();
-        m_controller->resume( id );
+        Q_EMIT m_controller->downloader( id )->resume();
     }
 }
 
@@ -76,17 +76,17 @@ void MainWindow::onPause()
     if( currentIndex.isValid() )
     {
         int id = currentIndex.row();
-        m_controller->pause( id );
+        Q_EMIT m_controller->downloader( id )->pause();
     }
 }
 
-void MainWindow::onStop()
+void MainWindow::onRemove()
 {
     auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
     if( currentIndex.isValid() )
     {
         int id = currentIndex.row();
-        m_controller->stop( id );
+        m_controller->removeDownload( id );
     }
 }
 
