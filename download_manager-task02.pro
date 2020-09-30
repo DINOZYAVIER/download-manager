@@ -29,14 +29,16 @@ SOURCES += \
     sources/controller.cpp \
     sources/downloadtablemodel.cpp \
     sources/main.cpp \
-    sources/mainwindow.cpp
+    sources/mainwindow.cpp \
+    sources/progressbardelegate.cpp
 
 HEADERS += \
     sources/downloader.h \
     sources/controller.h \
     sources/downloadtablemodel.h \
     sources/mainwindow.h \
-    sources/precompiled.h
+    sources/precompiled.h \
+    sources/progressbardelegate.h
 
 FORMS += \
     forms/mainwindow.ui \

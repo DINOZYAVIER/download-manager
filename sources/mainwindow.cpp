@@ -4,6 +4,7 @@
 #include "controller.h"
 #include "downloader.h"
 #include "downloadtablemodel.h"
+#include "progressbardelegate.h"
 
 MainWindow::MainWindow( QWidget* parent )
     : QMainWindow( parent )
