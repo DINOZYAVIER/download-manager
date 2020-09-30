@@ -20,6 +20,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QProgressBar>
+#include <QTableView>
 #endif
 
 #endif // PRECOMPILED_H
