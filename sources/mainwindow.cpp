@@ -19,6 +19,7 @@ MainWindow::MainWindow( QWidget* parent )
 
     m_ui->downloadTableView->setModel( m_downloadTableModel );
     m_ui->downloadTableView->resizeRowsToContents();
+    m_ui->downloadTableView->setItemDelegateForColumn( 3, new ProgressBarDelegate( this ) );
 
     connect( m_ui->downloadButton, &QAbstractButton::clicked, this, &MainWindow::onDownload );
     connect( m_ui->aResume, &QAction::triggered, this, &MainWindow::onResume );

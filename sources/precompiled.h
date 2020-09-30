@@ -3,6 +3,7 @@
 
 #if defined __cplusplus
 // Add C++ includes here
+#include <QApplication>
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -18,6 +19,7 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QProgressBar>
 #endif
 
 #endif // PRECOMPILED_H
