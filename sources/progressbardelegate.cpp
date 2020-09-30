@@ -1,6 +1,7 @@
 #include "progressbardelegate.h"
 
-ProgressBarDelegate::ProgressBarDelegate()
+ProgressBarDelegate::ProgressBarDelegate( QObject* parent ) :
+    QItemDelegate( parent )
 {
 
 }

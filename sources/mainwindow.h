@@ -6,6 +6,7 @@
 namespace Ui { class MainWindow; }
 class Controller;
 class DownloadTableModel;
+class ProgressBarDelegate;
 
 class MainWindow : public QMainWindow
 {
@@ -28,9 +29,10 @@ private Q_SLOTS:
     void onGetDownloadDir();
 
 private:
-    Ui::MainWindow*     m_ui;
-    DownloadTableModel* m_downloadTableModel;
-    Controller*         m_controller;
-    QString             m_downloadDir;
+    Ui::MainWindow*      m_ui;
+    DownloadTableModel*  m_downloadTableModel;
+    Controller*          m_controller;
+    QString              m_downloadDir;
+    ProgressBarDelegate* m_progressBarDelegate;
 };
 #endif // MAINWINDOW_H

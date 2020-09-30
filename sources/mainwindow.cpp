@@ -13,6 +13,7 @@ MainWindow::MainWindow( QWidget* parent )
 {
     m_ui->setupUi( this );
     m_downloadTableModel = new DownloadTableModel( this );
+    m_progressBarDelegate = new ProgressBarDelegate( this );
     m_controller = new Controller( *m_downloadTableModel, this );
     loadSettings();
 
