@@ -8,12 +8,16 @@ Downloader::Downloader( const QUrl& url, QString path ) :
     m_elapsedTimer( nullptr ),
     m_thread( nullptr ),
     m_downloadDir( path ),
-    m_pauseFlag( false )
+    m_downloadProgress( 0 ),
+    m_downloadProgressAtPause( 0 )
 {
-    m_file.setFileName( m_downloadDir + saveFileName( url ) );
-    checkFileLocation();
+    m_file.setFileName( m_downloadDir + saveFileName( m_url ) );
+    //checkFileLocation();
     m_manager = new QNetworkAccessManager( this );
     m_request = new QNetworkRequest( m_url );
+
+    if( !m_file.open( QIODevice::ReadWrite ) )
+        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
 }
 
 Downloader::~Downloader()
@@ -22,8 +26,6 @@ Downloader::~Downloader()
     {
         if( m_reply->isRunning() )
         {
-            if( m_pauseFlag == true )
-                m_file.close();
             m_reply->abort();
             m_reply->close();
             // TODO Delete file
@@ -45,7 +47,6 @@ void Downloader::doDownload()
     qDebug() << "Starting download" << m_url;
     qDebug() << "Thread ID" << QThread::currentThreadId();
 
-
     m_reply = m_manager->get( *m_request );
 
     if( m_elapsedTimer )
@@ -63,33 +64,15 @@ void Downloader::doDownload()
     m_reply->open( QIODevice::ReadWrite );
 }
 
-bool Downloader::saveToDisk( QIODevice* data )
+bool Downloader::saveToDisk()
 {
-    QMutex fileMutex;
-    fileMutex.lock();
-
     checkFileLocation();
-    if( m_pauseFlag == false )
+    if( m_file.isOpen() )
     {
-        if( !m_file.open( QIODevice::ReadWrite ) )
-        {
-            qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
-            fileMutex.unlock();
-            return false;
-        }
-
-        m_file.write( data->readAll() );
         m_file.close();
-        fileMutex.unlock();
         return true;
     }
-    else
-    {
-        m_file.write( data->readAll() );
-        m_file.close();
-        fileMutex.unlock();
-        return true;
-    }
+    return false;
 }
 
 bool Downloader::isHttpRedirect( QNetworkReply* reply )
@@ -120,7 +103,7 @@ void Downloader::onFinished()
             qDebug() << "Request was redirected.\n";
         else
         {
-            if( saveToDisk( m_reply ) )
+            if( saveToDisk() )
                 qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
         }
     }
@@ -129,12 +112,13 @@ void Downloader::onFinished()
 
 void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
+    m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
+    m_file.write( m_reply->readAll() );
     QVariantList data;
-    data.append( m_file.fileName() );
-    data.append( QString::number( bytesReceived / 1048576) + '/' + QString::number( bytesTotal / 1048576 ) + "MB" );
+    data.append( m_url.fileName() );
+    data.append( QString::number( ( bytesReceived + m_downloadProgressAtPause ) / 1048576) + '/' + QString::number( ( bytesTotal + m_downloadProgressAtPause ) / 1048576 ) + "MB" );
     data.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    //data.append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    data.append( ( bytesReceived * 100  / bytesTotal ) );
+    data.append( ( ( bytesReceived + m_downloadProgressAtPause ) * 100  / ( bytesTotal + m_downloadProgressAtPause ) ) );
     Q_EMIT progressChanged( data );
 }
 
@@ -151,18 +135,21 @@ QString Downloader::saveFileName( const QUrl& url )
 
 void Downloader::resume()
 {
-    auto DownloadSizeAtPause = m_file.size();
-    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( DownloadSizeAtPause ) + '-';
-    qDebug() << m_request->rawHeader( "Range" );
-    m_request->setRawHeader( "Range", rangeHeaderValue );
-    qDebug() << m_request->rawHeader( "Range" );
+    if( m_reply == 0 )
+    {
+        QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( m_downloadProgressAtPause ) + '-';
+        qDebug() << m_request->rawHeader( "Range" );
+        m_request->setRawHeader( "Range", rangeHeaderValue );
+        qDebug() << m_request->rawHeader( "Range" );
+        //m_file.open( QIODevice::ReadWrite );
 
-    doDownload();
+        doDownload();
+    }
 }
 
 void Downloader::pause()
 {
-    QMutex mutex;
+    qDebug() << "pause at" << m_downloadProgress;
     if( m_reply == 0 )
     {
         return;
@@ -173,23 +160,18 @@ void Downloader::pause()
     disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
     m_reply->abort();
-    m_reply->open( QIODevice::ReadWrite );
+    m_file.flush();
 
-    mutex.lock();
-    if( !m_file.isOpen() )
-        m_file.open( QIODevice::ReadWrite );
-    m_file.write( m_reply->readAll() );
-    mutex.unlock();
-
-    qDebug() << m_file.size();
-
-    m_pauseFlag = true;
+    m_downloadProgressAtPause = m_downloadProgress;
+    m_downloadProgress = 0;
     m_reply = 0;
 }
 
 void Downloader::checkFileLocation()
 {
-    if( QFile::exists( m_file.fileName() ) && m_pauseFlag == false)
+    m_file.close();
+    //m_file.setFileName( m_downloadDir + saveFileName( m_url ) );
+    if( QFile::exists( m_file.fileName() ) )
     {
         // already exists, don't overwrite
         int i = 0;
@@ -199,6 +181,7 @@ void Downloader::checkFileLocation()
 
         m_file.setFileName( m_file.fileName() + QString::number( i ) );
     }
+    m_file.open( QIODevice::ReadWrite );
 }
 
 

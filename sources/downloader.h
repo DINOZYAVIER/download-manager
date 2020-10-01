@@ -20,7 +20,7 @@ public:
     Q_SLOT void resume();
     Q_SLOT void pause();
 
-    bool saveToDisk( QIODevice* data );
+    bool saveToDisk();
     static bool isHttpRedirect( QNetworkReply* reply );
     void checkFileLocation();
 
@@ -46,7 +46,8 @@ private:
     QElapsedTimer*         m_elapsedTimer;
     QThread*               m_thread;
     QString                m_downloadDir;
-    bool                   m_pauseFlag;
+    qint64                 m_downloadProgress;
+    qint64                 m_downloadProgressAtPause;
 
     static QString saveFileName( const QUrl& url );
 };
