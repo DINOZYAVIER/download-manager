@@ -27,6 +27,8 @@ private Q_SLOTS:
     void onRemove();
     void onFileOpen();
     void onGetDownloadDir();
+    void onAboutClicked();
+    void onAboutQtClicked();
 
 private:
     Ui::MainWindow*      m_ui;

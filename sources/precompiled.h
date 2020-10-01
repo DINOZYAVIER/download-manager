@@ -22,6 +22,7 @@
 #include <QProgressBar>
 #include <QTableView>
 #include <QPainter>
+#include <QMessageBox>
 #endif
 
 #endif // PRECOMPILED_H

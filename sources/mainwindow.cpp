@@ -27,6 +27,9 @@ MainWindow::MainWindow( QWidget* parent )
     connect( m_ui->aRemove, &QAction::triggered, this, &MainWindow::onRemove );
     connect( m_ui->aOpen, &QAction::triggered, this, &MainWindow::onFileOpen );
     connect( m_ui->aSetDownloadDir, &QAction::triggered, this, &MainWindow::onGetDownloadDir );
+    //connect( m_ui->aAbout, &QAction::triggered, this, &MainWindow::onAboutClicked );
+    //connect( m_ui->aAboutQt, &QAction::triggered, this, &MainWindow::onAboutQtClicked );
+
 
     qDebug() << "Main thread ID:" << QThread::currentThreadId();
 }
@@ -118,3 +121,15 @@ void MainWindow::setDownloadDir( QString path )
 {
     m_controller->setDownloadPath( path );
 }
+
+void MainWindow::onAboutClicked()
+{
+    QMessageBox::about( this, "About the program",
+                              "Download Manager Application \nTest assignment by Arthur Konovalov for NIX Solutions.");
+}
+
+void MainWindow::onAboutQtClicked()
+{
+    QMessageBox::aboutQt( this, "About Qt" );
+}
+

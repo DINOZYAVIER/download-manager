@@ -110,8 +110,16 @@
     </property>
     <addaction name="aSetDownloadDir"/>
    </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="aAbout"/>
+    <addaction name="aAboutQt"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -151,6 +159,16 @@
   <action name="aSetDownloadDir">
    <property name="text">
     <string>Set download folder</string>
+   </property>
+  </action>
+  <action name="aAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="aAboutQt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>
