@@ -4,8 +4,6 @@
 #include <QObject>
 #include <QStyledItemDelegate>
 
-class QTableView;
-
 class ProgressBarDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
@@ -14,8 +12,5 @@ public:
 
     int left_x() const;
     void paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
-private:
-    QTableView* m_table;
-
 };
 #endif // PROGRESSBARDELEGATE_H

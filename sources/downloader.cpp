@@ -131,7 +131,7 @@ void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
     QVariantList data;
     data.append( m_file.fileName() );
-    data.append( QString::number( bytesTotal / 1048576 ) + "MB" );
+    data.append( QString::number( bytesReceived / 1048576) + '/' + QString::number( bytesTotal / 1048576 ) + "MB" );
     data.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
     //data.append( QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
     data.append( ( bytesReceived * 100  / bytesTotal ) );

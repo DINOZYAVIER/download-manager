@@ -21,6 +21,7 @@
 #include <QStandardPaths>
 #include <QProgressBar>
 #include <QTableView>
+#include <QPainter>
 #endif
 
 #endif // PRECOMPILED_H
