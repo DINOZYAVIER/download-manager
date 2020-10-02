@@ -22,7 +22,6 @@ public:
 
     bool saveToDisk();
     static bool isHttpRedirect( QNetworkReply* reply );
-    void checkFileLocation();
 
 Q_SIGNALS:
     void progressChanged( QVariantList data );

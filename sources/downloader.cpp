@@ -11,7 +11,22 @@ Downloader::Downloader( const QUrl& url, QString path ) :
     m_downloadProgress( 0 ),
     m_downloadProgressAtPause( 0 )
 {
-    m_file.setFileName( m_downloadDir + saveFileName( m_url ) + ".part" );
+    QString name = m_downloadDir + saveFileName( m_url ) + ".part";
+    m_file.setFileName( name );
+    if( QFile::exists( name ) )
+    {
+        // already exists, don't overwrite
+        int i = 0;
+        name += '_' ;
+        while( QFile::exists( name + QString::number( i ) ) )
+            ++i;
+
+       name += QString::number( i );
+    }
+    qDebug() << m_file.fileName();
+    qDebug() << name;
+    m_file.setFileName( name );
+
     m_manager = new QNetworkAccessManager( this );
     m_request = new QNetworkRequest( m_url );
 
@@ -70,7 +85,19 @@ void Downloader::doDownload()
 
 bool Downloader::saveToDisk()
 {
-    checkFileLocation();
+    QString name = m_downloadDir + saveFileName( m_url );
+    if( QFile::exists( name ) )
+    {
+        // already exists, don't overwrite
+        int i = 0;
+        name += '_' ;
+        while( QFile::exists( name + QString::number( i ) ) )
+            ++i;
+
+       name += QString::number( i );
+    }
+    QFile::rename( m_file.fileName(), name );
+
     if( m_file.isOpen() )
     {
         m_file.close();
@@ -168,23 +195,6 @@ void Downloader::pause()
     m_downloadProgressAtPause = m_downloadProgress;
     m_downloadProgress = 0;
     m_reply = 0;
-}
-
-void Downloader::checkFileLocation()
-{
-    QString name = m_downloadDir + saveFileName( m_url );
-    if( QFile::exists( name ) )
-    {
-        // already exists, don't overwrite
-        int i = 0;
-        name += '_' ;
-        while( QFile::exists( name + QString::number( i ) ) )
-            ++i;
-
-       name += QString::number( i );
-    }
-    qDebug() << name;
-    qDebug() << m_file.rename( m_file.fileName(), name );
 }
 
 
