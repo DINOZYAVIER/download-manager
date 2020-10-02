@@ -11,8 +11,7 @@ Downloader::Downloader( const QUrl& url, QString path ) :
     m_downloadProgress( 0 ),
     m_downloadProgressAtPause( 0 )
 {
-    m_file.setFileName( m_downloadDir + saveFileName( m_url ) );
-    //checkFileLocation();
+    m_file.setFileName( m_downloadDir + saveFileName( m_url ) + ".part" );
     m_manager = new QNetworkAccessManager( this );
     m_request = new QNetworkRequest( m_url );
 
@@ -28,7 +27,6 @@ Downloader::~Downloader()
         {
             m_reply->abort();
             m_reply->close();
-            // TODO Delete file
         }
         m_reply->deleteLater();
     }
@@ -39,6 +37,12 @@ Downloader::~Downloader()
         delete m_elapsedTimer;
     }
 
+    if( m_file.isOpen() )
+    {
+        m_file.close();
+        m_file.remove();
+    }
+
     delete m_request;
 }
 
@@ -46,6 +50,7 @@ void Downloader::doDownload()
 {
     qDebug() << "Starting download" << m_url;
     qDebug() << "Thread ID" << QThread::currentThreadId();
+    qDebug() << "Thread address" << QThread::currentThread();
 
     m_reply = m_manager->get( *m_request );
 
@@ -61,7 +66,6 @@ void Downloader::doDownload()
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
     connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
-    m_reply->open( QIODevice::ReadWrite );
 }
 
 bool Downloader::saveToDisk()
@@ -141,7 +145,6 @@ void Downloader::resume()
         qDebug() << m_request->rawHeader( "Range" );
         m_request->setRawHeader( "Range", rangeHeaderValue );
         qDebug() << m_request->rawHeader( "Range" );
-        //m_file.open( QIODevice::ReadWrite );
 
         doDownload();
     }
@@ -169,19 +172,19 @@ void Downloader::pause()
 
 void Downloader::checkFileLocation()
 {
-    m_file.close();
-    //m_file.setFileName( m_downloadDir + saveFileName( m_url ) );
-    if( QFile::exists( m_file.fileName() ) )
+    QString name = m_downloadDir + saveFileName( m_url );
+    if( QFile::exists( name ) )
     {
         // already exists, don't overwrite
         int i = 0;
-        m_file.setFileName( m_file.fileName() + '_' );
-        while( QFile::exists( m_file.fileName() + QString::number( i ) ) )
+        name += '_' ;
+        while( QFile::exists( name + QString::number( i ) ) )
             ++i;
 
-        m_file.setFileName( m_file.fileName() + QString::number( i ) );
+       name += QString::number( i );
     }
-    m_file.open( QIODevice::ReadWrite );
+    qDebug() << name;
+    qDebug() << m_file.rename( m_file.fileName(), name );
 }
 
 
