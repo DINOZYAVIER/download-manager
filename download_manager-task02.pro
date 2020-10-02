@@ -70,4 +70,7 @@ win32|macx {
     CONFIG(release, debug|release): QMAKE_POST_LINK = $${DEPLOY_COMMAND} $${DEPLOY_TARGET}
 }
 
+RESOURCES += \
+    resources/resources.qrc
+
 

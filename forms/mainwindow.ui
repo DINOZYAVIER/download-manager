@@ -137,18 +137,41 @@
    <addaction name="aRemove"/>
   </widget>
   <action name="aResume">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/icons/resume-icon-png-0.jpg.png</normaloff>
+     <normalon>:/images/icons/resume.png</normalon>:/images/icons/resume-icon-png-0.jpg.png</iconset>
+   </property>
    <property name="text">
     <string>Resume</string>
    </property>
+   <property name="toolTip">
+    <string>Resume selected download</string>
+   </property>
   </action>
   <action name="aPause">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/images/icons/pause.png</normaloff>:/images/icons/pause.png</iconset>
+   </property>
    <property name="text">
     <string>Pause</string>
    </property>
+   <property name="toolTip">
+    <string>Pause selected download</string>
+   </property>
   </action>
   <action name="aRemove">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/images/icons/stop.png</normaloff>
+     <normalon>:/images/icons/pnghut_stop-icon-oval-logo_cBwXHstBKA.png</normalon>:/images/icons/stop.png</iconset>
+   </property>
    <property name="text">
     <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected download</string>
    </property>
   </action>
   <action name="aOpen">
@@ -172,6 +195,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
