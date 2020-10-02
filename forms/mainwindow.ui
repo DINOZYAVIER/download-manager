@@ -148,6 +148,12 @@
    <property name="toolTip">
     <string>Resume selected download</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="aPause">
    <property name="icon">

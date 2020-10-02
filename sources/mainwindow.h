@@ -4,9 +4,9 @@
 #include <QMainWindow>
 
 namespace Ui { class MainWindow; }
+
 class Controller;
 class DownloadTableModel;
-class ProgressBarDelegate;
 
 class MainWindow : public QMainWindow
 {
@@ -35,6 +35,5 @@ private:
     DownloadTableModel*  m_downloadTableModel;
     Controller*          m_controller;
     QString              m_downloadDir;
-    ProgressBarDelegate* m_progressBarDelegate;
 };
 #endif // MAINWINDOW_H

@@ -13,7 +13,6 @@ MainWindow::MainWindow( QWidget* parent )
 {
     m_ui->setupUi( this );
     m_downloadTableModel = new DownloadTableModel( this );
-    //m_progressBarDelegate = new ProgressBarDelegate( m_ui->downloadTableView );
     m_controller = new Controller( *m_downloadTableModel, this );
     loadSettings();
 
@@ -27,8 +26,12 @@ MainWindow::MainWindow( QWidget* parent )
     connect( m_ui->aRemove, &QAction::triggered, this, &MainWindow::onRemove );
     connect( m_ui->aOpen, &QAction::triggered, this, &MainWindow::onFileOpen );
     connect( m_ui->aSetDownloadDir, &QAction::triggered, this, &MainWindow::onGetDownloadDir );
-    //connect( m_ui->aAbout, &QAction::triggered, this, &MainWindow::onAboutClicked );
-    //connect( m_ui->aAboutQt, &QAction::triggered, this, &MainWindow::onAboutQtClicked );
+    connect( m_ui->aAbout, &QAction::triggered, this, &MainWindow::onAboutClicked );
+    connect( m_ui->aAboutQt, &QAction::triggered, this, &MainWindow::onAboutQtClicked );
+
+    m_ui->aResume->setEnabled( false );
+    m_ui->aPause->setEnabled( false );
+    m_ui->aRemove->setEnabled( false );
 
 
     qDebug() << "Main thread ID:" << QThread::currentThreadId();
@@ -62,6 +65,9 @@ void MainWindow::saveSettings()
 
 void MainWindow::onDownload()
 {
+    m_ui->aResume->setEnabled( true );
+    m_ui->aPause->setEnabled( true );
+    m_ui->aRemove->setEnabled( true );
     QUrl url = QUrl::fromEncoded( m_ui->PathEdit->text().toLocal8Bit() );
     m_controller->addDownload( url );
 }
@@ -108,6 +114,9 @@ void MainWindow::onFileOpen()
     while ( !in.atEnd() )
         m_controller->addDownload( in.readLine() );
     file.close();
+    m_ui->aResume->setEnabled( true );
+    m_ui->aPause->setEnabled( true );
+    m_ui->aRemove->setEnabled( true );
 }
 
 void MainWindow::onGetDownloadDir()
