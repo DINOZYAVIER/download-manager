@@ -103,6 +103,7 @@
      <string>File</string>
     </property>
     <addaction name="aOpen"/>
+    <addaction name="aClose"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -198,6 +199,11 @@
   <action name="aAboutQt">
    <property name="text">
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="aClose">
+   <property name="text">
+    <string>Close</string>
    </property>
   </action>
  </widget>

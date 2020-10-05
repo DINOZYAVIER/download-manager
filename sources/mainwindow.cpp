@@ -28,6 +28,7 @@ MainWindow::MainWindow( QWidget* parent )
     connect( m_ui->aSetDownloadDir, &QAction::triggered, this, &MainWindow::onGetDownloadDir );
     connect( m_ui->aAbout, &QAction::triggered, this, &MainWindow::onAboutClicked );
     connect( m_ui->aAboutQt, &QAction::triggered, this, &MainWindow::onAboutQtClicked );
+    connect( m_ui->aClose, &QAction::triggered, this, &MainWindow::close );
 
     m_ui->aResume->setEnabled( false );
     m_ui->aPause->setEnabled( false );
