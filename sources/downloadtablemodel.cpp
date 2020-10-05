@@ -39,12 +39,12 @@ QVariant DownloadTableModel::headerData( int section, Qt::Orientation orientatio
         return QVariant();
 }
 
-int DownloadTableModel::rowCount( const QModelIndex &parent ) const
+int DownloadTableModel::rowCount( const QModelIndex& ) const
 {
     return m_data.size();
 }
 
-int DownloadTableModel::columnCount(const QModelIndex &parent) const
+int DownloadTableModel::columnCount(const QModelIndex& ) const
 {
     return NUMBER_OF_COLUMNS;
 }

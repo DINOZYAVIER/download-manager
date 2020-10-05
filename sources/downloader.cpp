@@ -127,7 +127,6 @@ void Downloader::onSSLError( const QList<QSslError>& sslErrors )
 
 void Downloader::onFinished()
 {
-    //qDebug() << "onFinished";
     QUrl url = m_reply->url();
     if( m_reply->error() == QNetworkReply::NoError )
     {
@@ -170,9 +169,7 @@ void Downloader::resume( Downloader* downloader )
     if( m_reply == 0 && this == downloader )
     {
         QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( m_downloadProgressAtPause ) + '-';
-        qDebug() << m_request->rawHeader( "Range" );
         m_request->setRawHeader( "Range", rangeHeaderValue );
-        qDebug() << m_request->rawHeader( "Range" );
 
         doDownload();
     }
@@ -182,7 +179,7 @@ void Downloader::pause( Downloader* downloader )
 {
     if( m_reply != 0 && this == downloader )
     {
-        qDebug() << "pause at" << m_downloadProgress;
+        qDebug() << "Pause at" << m_downloadProgress << "bytes";
 
         disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
         disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
