@@ -53,6 +53,7 @@ DESTDIR = $$PWD/bin/$${PLATFORM}_$${BUILD_CONFIG}/
 win32 {
     DEPLOY_TARGET = $$shell_quote($$DESTDIR/$${TARGET}.exe)
     DEPLOY_COMMAND = windeployqt --no-compiler-runtime --no-opengl-sw
+    RC_FILE = ./resources/appicon/download_manager.ico
     QMAKE_TARGET_COMPANY = NixSolutions LLC
     QMAKE_TARGET_PRODUCT = Download Manager App
     QMAKE_TARGET_DESCRIPTION = Download Manager App
@@ -62,7 +63,7 @@ win32 {
 macx {
     DEPLOY_TARGET = $$shell_quote($$DESTDIR/$${TARGET}.app)
     DEPLOY_COMMAND = macdeployqt
-    #QMAKE_INFO_PLIST=./resources/hospital.plist
+    ICON = ./resources/appicon/download_manager.icns
 }
 
 win32|macx {
