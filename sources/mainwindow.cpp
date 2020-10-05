@@ -78,7 +78,8 @@ void MainWindow::onResume()
     if( currentIndex.isValid() )
     {
         int id = currentIndex.row();
-        Q_EMIT m_controller->downloader( id )->resume();
+        m_controller->resume( m_controller->downloader( id ) );
+        //Q_EMIT m_controller->downloader( id )->resume();
     }
 }
 
@@ -88,7 +89,8 @@ void MainWindow::onPause()
     if( currentIndex.isValid() )
     {
         int id = currentIndex.row();
-        Q_EMIT m_controller->downloader( id )->pause();
+        m_controller->pause( m_controller->downloader( id ) );
+        //Q_EMIT m_controller->downloader( id )->pause();
     }
 }
 

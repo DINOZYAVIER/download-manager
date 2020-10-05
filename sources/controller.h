@@ -26,6 +26,8 @@ public:
     void removeDownload( int id );
     void setDownloadPath( QString path ) { m_downloadPath = path; }
     Downloader* downloader( int id ) { return m_journal[ id ].downloader; }
+    void resume( Downloader* downloader );
+    void pause( Downloader* downloader );
 private:
     DownloadTableModel& m_model;
     QList<JournalItem>  m_journal;
@@ -34,6 +36,9 @@ private:
     int findDownloader( QObject* downloader );
     void removeItem( int index );
     void releaseItem( JournalItem& item );
+
+    Q_SIGNAL void resumeSignal( Downloader* downloader );
+    Q_SIGNAL void pauseSignal( Downloader* downloader );
 
     Q_SLOT void displayData( QVariantList data );
     Q_SLOT void freeResources();

@@ -127,6 +127,7 @@ void Downloader::onSSLError( const QList<QSslError>& sslErrors )
 
 void Downloader::onFinished()
 {
+    //qDebug() << "onFinished";
     QUrl url = m_reply->url();
     if( m_reply->error() == QNetworkReply::NoError )
     {
@@ -164,9 +165,9 @@ QString Downloader::saveFileName( const QUrl& url )
     return basename;
 }
 
-void Downloader::resume()
+void Downloader::resume( Downloader* downloader )
 {
-    if( m_reply == 0 )
+    if( m_reply == 0 && this == downloader )
     {
         QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( m_downloadProgressAtPause ) + '-';
         qDebug() << m_request->rawHeader( "Range" );
@@ -177,24 +178,24 @@ void Downloader::resume()
     }
 }
 
-void Downloader::pause()
+void Downloader::pause( Downloader* downloader )
 {
-    qDebug() << "pause at" << m_downloadProgress;
-    if( m_reply == 0 )
+    if( m_reply != 0 && this == downloader )
     {
-        return;
+        qDebug() << "pause at" << m_downloadProgress;
+
+        disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+        disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+        disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+        disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+
+        m_reply->abort();
+        m_file.flush();
+
+        m_downloadProgressAtPause = m_downloadProgress;
+        m_downloadProgress = 0;
+        m_reply = 0;
     }
-    disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
-    disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-    disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
-    disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
-
-    m_reply->abort();
-    m_file.flush();
-
-    m_downloadProgressAtPause = m_downloadProgress;
-    m_downloadProgress = 0;
-    m_reply = 0;
 }
 
 

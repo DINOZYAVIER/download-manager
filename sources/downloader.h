@@ -17,8 +17,8 @@ public:
     QNetworkReply* reply() { return m_reply; }
 
     Q_SLOT void doDownload();
-    Q_SLOT void resume();
-    Q_SLOT void pause();
+    Q_SLOT void resume( Downloader* downloader );
+    Q_SLOT void pause( Downloader* downloader );
 
     bool saveToDisk();
     static bool isHttpRedirect( QNetworkReply* reply );
@@ -26,8 +26,6 @@ public:
 Q_SIGNALS:
     void progressChanged( QVariantList data );
     void finished();
-    void resumeSignal();
-    void pauseSignal();
 
 private Q_SLOTS:
     void onProgress( qint64 bytesReceived, qint64 bytesTotal );
