@@ -1,9 +1,10 @@
 #include "precompiled.h"
 #include "downloadtablemodel.h"
 
+#define NUMBER_OF_COLUMNS 4
+
 DownloadTableModel::DownloadTableModel( QObject *parent )
-    : QAbstractTableModel( parent ),
-      m_rows( 0 )
+    : QAbstractTableModel( parent )
 {
 }
 
@@ -38,39 +39,51 @@ QVariant DownloadTableModel::headerData( int section, Qt::Orientation orientatio
         return QVariant();
 }
 
-int DownloadTableModel::rowCount( const QModelIndex &parent ) const
+int DownloadTableModel::rowCount( const QModelIndex& ) const
 {
-    return m_rows;
+    return m_data.size();
 }
 
-int DownloadTableModel::columnCount( const QModelIndex &parent ) const
+int DownloadTableModel::columnCount(const QModelIndex& ) const
 {
     return NUMBER_OF_COLUMNS;
 }
 
-QVariant DownloadTableModel::data( const QModelIndex &index, int role ) const
+QVariant DownloadTableModel::data( const QModelIndex& index, int role ) const
 {
     if( role == Qt::DisplayRole && index.isValid() )
     {
-        if( index.column() > m_data.at( index.row())->size() - 1 )
+        if( index.column() > m_data.at( index.row() ).size() - 1 )
             return QVariant();
         else
-            return m_data.at( index.row())->at( index.column() );
+            return m_data.at( index.row() ).at( index.column() );
     }
     return QVariant();
 }
 
-void DownloadTableModel::setDataList( QVariantList* dataList, int number )
+void DownloadTableModel::setDataList( QVariantList dataList, int number )
 {
-    if( number >= m_rows )
+    if( number >= m_data.size() )
     {
-        beginInsertRows( QModelIndex(), m_rows, m_rows );
+        beginInsertRows( QModelIndex(), number, number );
         m_data.append( dataList );
-        ++m_rows;
         endInsertRows();
     }
-    Q_EMIT dataChanged( index( 0, 0 ), index( m_rows - 1, NUMBER_OF_COLUMNS - 1 ) );
+    else
+    {
+        m_data.replace( number, dataList );
+        Q_EMIT dataChanged( index( number, 0 ), index( number, NUMBER_OF_COLUMNS - 1 ) );
+    }
 }
 
+void DownloadTableModel::removeDownload( int id )
+{
+    if( id >= m_data.size() )
+        return;
+    beginRemoveRows( QModelIndex(), id, id );
+    m_data.removeAt( id );
+    endRemoveRows();
+    Q_EMIT dataChanged( index( id, 0 ), index( id, NUMBER_OF_COLUMNS - 1 ) );
+}
 
 

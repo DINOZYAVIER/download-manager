@@ -2,12 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "controller.h"
 
-
-QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+
+class Controller;
+class DownloadTableModel;
 
 class MainWindow : public QMainWindow
 {
@@ -17,13 +16,24 @@ public:
     MainWindow( QWidget* parent = nullptr );
     ~MainWindow();
 
+    void setDownloadDir( QString path );
+    void loadSettings();
+    void saveSettings();
+
 private Q_SLOTS:
     void onDownload();
+    void onResume();
+    void onPause();
+    void onRemove();
+    void onFileOpen();
+    void onGetDownloadDir();
+    void onAboutClicked();
+    void onAboutQtClicked();
 
 private:
-    Ui::MainWindow* m_ui;
-    DownloadTableModel* m_downloadTableModel;
-    Controller* m_controller;
-    QVector<QThread*> m_threads;
+    Ui::MainWindow*      m_ui;
+    DownloadTableModel*  m_downloadTableModel;
+    Controller*          m_controller;
+    QString              m_downloadDir;
 };
 #endif // MAINWINDOW_H

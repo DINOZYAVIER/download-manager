@@ -2,35 +2,51 @@
 #define DOWNLOADER_H
 
 #include <QObject>
-#include <QNetworkAccessManager>
-#include <QThread>
-#include "downloadtablemodel.h"
+#include <QNetworkReply>
+#include <QFile>
+
+class QElapsedTimer;
 
 class Downloader : public QObject
 {
     Q_OBJECT
 public:
-    explicit Downloader( QObject* parent = nullptr, const QUrl& url = QUrl(), QVariant id = 0 );
+    explicit Downloader( const QUrl& url, QString path );
     ~Downloader();
 
-    void doDownload();
-    static QString saveFileName( const QUrl& url );
-    bool saveToDisk( const QString& filename, QIODevice* data );
+    QNetworkReply* reply() { return m_reply; }
+
+    Q_SLOT void doDownload();
+    Q_SLOT void resume( Downloader* downloader );
+    Q_SLOT void pause( Downloader* downloader );
+
+    bool saveToDisk();
     static bool isHttpRedirect( QNetworkReply* reply );
-    QVariantList* dataList() { return &m_dataList; }
 Q_SIGNALS:
-    void sendProgress();
+    void progressChanged( QVariantList data );
+    void finished();
+    void errorOccured();
+
 private Q_SLOTS:
-    void onProcess( qint64 bytesReceived, qint64 bytesTotal );
-    void downloadFinished( QNetworkReply* reply );
-    void sslErrors( const QList<QSslError>& errors );
+    void onProgress( qint64 bytesReceived, qint64 bytesTotal );
+    void onFinished();
+    void onError( QNetworkReply::NetworkError code );
+    void onSSLError( const QList<QSslError>& errors );
+
+
 private:
+    QUrl                   m_url;
+    QFile                  m_file;
+    QNetworkReply*         m_reply;
     QNetworkAccessManager* m_manager;
-    QVariantList m_dataList;
-    QUrl m_currentUrl;
-    QElapsedTimer* m_elapsedTimer;
+    QNetworkRequest*       m_request;
+    QElapsedTimer*         m_elapsedTimer;
+    QThread*               m_thread;
+    QString                m_downloadDir;
+    qint64                 m_downloadProgress;
+    qint64                 m_downloadProgressAtPause;
+
+    static QString saveFileName( const QUrl& url );
 };
-
-
 
 #endif // DOWNLOADER_H

@@ -1,36 +1,120 @@
+#include "precompiled.h"
 #include "controller.h"
+#include "downloader.h"
+#include "downloadtablemodel.h"
 
+#ifndef INVALID_INDEX
+#define INVALID_INDEX -1
+#endif
 
-Controller::Controller( DownloadTableModel* model ) :
+Controller::Controller( DownloadTableModel& model, QObject* parent) :
+    QObject( parent ),
     m_model( model )
-  , m_threads( 0 )
 {
+    m_downloadPath = qApp->applicationDirPath() + '/';
 }
 
 void Controller::addDownload( QUrl url )
 {
     QThread* downloadThread = new QThread();
-    Downloader* download = new Downloader( nullptr, url );
-    m_journal.insert( m_threads++, new QPair<QThread*, Downloader*>( downloadThread, download ) );
-    download->moveToThread( downloadThread );
-    connect( downloadThread, &QThread::started, download, &Downloader::doDownload );
-    connect( download, &Downloader::sendProgress, this, &Controller::onDisplay );
-    connect( downloadThread, &QThread::finished, download, &QObject::deleteLater );
+    Downloader* downloader = new Downloader( url, m_downloadPath );
+    downloader->moveToThread( downloadThread );
+    m_journal.append( JournalItem( downloader, downloadThread ) );
+
+    connect( downloadThread, &QThread::started, downloader, &Downloader::doDownload );
+    connect( this, &Controller::resumeSignal, downloader, &Downloader::resume );
+    connect( this, &Controller::pauseSignal, downloader, &Downloader::pause );
+    connect( downloader, &Downloader::progressChanged, this, &Controller::displayData );
+    connect( downloader, &Downloader::finished, this, &Controller::freeResources );
+    connect( downloadThread, &QThread::finished, downloader, &Downloader::deleteLater );
+    connect( downloader, &Downloader::errorOccured, this, &Controller::onErrorOccured );
+    Q_EMIT downloader->progressChanged( QVariantList() );
     downloadThread->start();
-    //qDebug() << "Thread ID: " << downloadThread->currentThreadId();
 }
 
 Controller::~Controller()
 {
+    for( auto& item : m_journal )
+        releaseItem( item );
+}
 
+int Controller::findDownloader( QObject* downloader )
+{
     for( int i = 0; i < m_journal.size(); ++i )
     {
-        delete m_journal.value( i )->second;
+        if( m_journal.at( i ).downloader == downloader )
+            return i;
+    }
+    return INVALID_INDEX;
+}
+
+void Controller::removeItem( int index )
+{
+    if( index >= m_journal.size() )
+        return;
+    releaseItem( m_journal[ index ] );
+    m_journal.removeAt( index );
+}
+
+void Controller::releaseItem( JournalItem& item )
+{
+    if( item.downloader )
+        disconnect( item.downloader, nullptr, this, nullptr );
+    item.downloader = nullptr;
+    if( item.thread && item.thread->isRunning() )
+    {
+        item.thread->quit();
+        item.thread->wait();
+    }
+    delete item.thread;
+    item.thread = nullptr;
+}
+
+void Controller::displayData( QVariantList data )
+{
+    auto* downloader = sender();
+    if( downloader )
+    {
+        int index = findDownloader( downloader );
+        if( index != INVALID_INDEX )
+            m_model.setDataList( data, index );
     }
 }
 
-void Controller::onDisplay()
+void Controller::freeResources()
 {
-    for( int i = 0; i < m_journal.size(); ++i )
-        m_model->setDataList( m_journal.value( i )->second->dataList(), i );
+    auto* downloader = sender();
+    if( downloader )
+    {
+        int index = findDownloader( downloader );
+        if( index != INVALID_INDEX )
+            releaseItem( m_journal[ index ] );
+    }
+}
+
+void Controller::removeDownload( int id )
+{
+    releaseItem( m_journal[ id ] );
+    removeItem( id );
+    m_model.removeDownload( id );
+}
+
+void Controller::resume( Downloader* downloader )
+{
+    Q_EMIT resumeSignal( downloader );
+}
+
+void Controller::pause( Downloader* downloader )
+{
+    Q_EMIT pauseSignal( downloader );
+}
+
+void Controller::onErrorOccured()
+{
+    auto* downloader = sender();
+    if( downloader )
+    {
+        int index = findDownloader( downloader );
+        removeDownload( index );
+    }
 }

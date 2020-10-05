@@ -1,38 +1,164 @@
 #include "precompiled.h"
 #include "downloader.h"
 
-Downloader::Downloader( QObject* parent, const QUrl& url, QVariant id ) :
-    QObject( parent )
-  , m_currentUrl( url )
+Downloader::Downloader( const QUrl& url, QString path ) :
+    QObject( nullptr ),
+    m_url( url ),
+    m_reply( nullptr ),
+    m_elapsedTimer( nullptr ),
+    m_thread( nullptr ),
+    m_downloadDir( path ),
+    m_downloadProgress( 0 ),
+    m_downloadProgressAtPause( 0 )
 {
-    m_dataList.append( saveFileName( m_currentUrl ) );
-    m_dataList.append( "" );
-    m_dataList.append( "" );
-    m_dataList.append( "" );
+    QString name = m_downloadDir + saveFileName( m_url ) + ".part";
+    m_file.setFileName( name );
+    if( QFile::exists( name ) )
+    {
+        // already exists, don't overwrite
+        int i = 0;
+        name += '_' ;
+        while( QFile::exists( name + QString::number( i ) ) )
+            ++i;
+
+       name += QString::number( i );
+    }
+    m_file.setFileName( name );
+
+    m_manager = new QNetworkAccessManager( this );
+    m_request = new QNetworkRequest( m_url );
+
+    if( !m_file.open( QIODevice::ReadWrite ) )
+        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+    m_manager->setRedirectPolicy( QNetworkRequest::NoLessSafeRedirectPolicy );
 }
 
 Downloader::~Downloader()
 {
-    delete m_elapsedTimer;
-    delete m_manager;
-    qDebug() << "Thread with ID " << QThread::currentThreadId() << "closed";
-    QThread::currentThread()->quit();
+    if( m_reply && m_reply->isRunning() )
+    {
+        if( m_reply->isRunning() )
+        {
+            m_reply->abort();
+            m_reply->close();
+        }
+        m_reply->deleteLater();
+    }
+
+    if( m_elapsedTimer )
+    {
+        m_elapsedTimer->invalidate();
+        delete m_elapsedTimer;
+    }
+
+    if( m_file.isOpen() )
+    {
+        m_file.close();
+        m_file.remove();
+    }
+
+    delete m_request;
 }
 
 void Downloader::doDownload()
 {
-    qDebug() << "Download started. Current thread ID:" << QThread::currentThreadId();
-    m_manager = new QNetworkAccessManager();
-    connect( m_manager->get( QNetworkRequest( m_currentUrl ) ), &QNetworkReply::downloadProgress, this, &Downloader::onProcess );
-    connect( m_manager, &QNetworkAccessManager::finished, this, &Downloader::downloadFinished );
-    QNetworkRequest request( m_currentUrl );
+    qDebug() << "Starting download" << m_url;
+    qDebug() << "Thread ID" << QThread::currentThreadId();
+    qDebug() << "Thread address" << QThread::currentThread();
 
-#if QT_CONFIG(ssl)
-    connect( m_manager->get( request ), &QNetworkReply::sslErrors,
-            this, &Downloader::sslErrors );
-#endif
-    m_elapsedTimer = new QElapsedTimer();
-    m_elapsedTimer->start();
+    m_reply = m_manager->get( *m_request );
+
+    if( m_elapsedTimer )
+        m_elapsedTimer->restart();
+    else
+    {
+        m_elapsedTimer = new QElapsedTimer();
+        m_elapsedTimer->start();
+    }
+
+    connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+    connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+    connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+    qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
+    qDebug() << "File info:" << m_reply->header( QNetworkRequest::ContentDispositionHeader );
+}
+
+bool Downloader::saveToDisk()
+{
+    QString name = m_downloadDir + saveFileName( m_url );
+    if( QFile::exists( name ) )
+    {
+        // already exists, don't overwrite
+        QFileInfo info( saveFileName( m_url ) );
+        int cnt = 0;
+        while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
+        {
+            ++cnt;
+        }
+        QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
+    }
+    else
+        QFile::rename( m_file.fileName(), name );
+
+    if( m_file.isOpen() )
+    {
+        m_file.close();
+        return true;
+    }
+    return false;
+}
+
+bool Downloader::isHttpRedirect( QNetworkReply* reply )
+{
+    int statusCode = reply->attribute( QNetworkRequest::HttpStatusCodeAttribute ).toInt();
+    return statusCode == 301 || statusCode == 302 || statusCode == 303
+           || statusCode == 305 || statusCode == 307 || statusCode == 308;
+}
+
+void Downloader::onError( QNetworkReply::NetworkError code )
+{
+    qDebug() << QString( "Downloading of %1 failed" ).arg( m_url.toString() );
+    qDebug() << "Error code:" << code << " Error:" << m_reply->errorString();
+    switch( code )
+    {
+    case QNetworkReply::ProtocolUnknownError:
+        m_reply->disconnect();
+        Q_EMIT errorOccured();
+        break;
+    default:
+        break;
+    }
+}
+void Downloader::onSSLError( const QList<QSslError>& sslErrors )
+{
+    for( const auto& error : sslErrors )
+        qDebug() << "SSL error:" << error.errorString();
+}
+
+void Downloader::onFinished()
+{
+    QUrl url = m_reply->url();
+    if( m_reply->error() == QNetworkReply::NoError )
+    {
+        if( isHttpRedirect( m_reply ) )
+            qDebug() << "Request was redirected.";
+        if( saveToDisk() )
+            qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
+    }
+    Q_EMIT finished();
+}
+
+void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
+{
+    m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
+    m_file.write( m_reply->readAll() );
+    QVariantList data;
+    data.append( m_url.fileName() );
+    data.append( QString::number( ( bytesReceived + m_downloadProgressAtPause ) / 1048576) + '/' + QString::number( ( bytesTotal + m_downloadProgressAtPause ) / 1048576 ) + "MB" );
+    data.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
+    data.append( ( ( bytesReceived + m_downloadProgressAtPause ) * 100  / ( bytesTotal + m_downloadProgressAtPause ) ) );
+    Q_EMIT progressChanged( data );
 }
 
 QString Downloader::saveFileName( const QUrl& url )
@@ -43,82 +169,36 @@ QString Downloader::saveFileName( const QUrl& url )
     if( basename.isEmpty() )
         basename = "download";
 
-    if( QFile::exists( basename ) )
-    {
-        // already exists, don't overwrite
-        int i = 0;
-        basename += '_';
-        while( QFile::exists( basename + QString::number( i ) ) )
-            ++i;
-
-        basename += QString::number( i );
-    }
-
     return basename;
 }
 
-bool Downloader::saveToDisk( const QString& filename, QIODevice* data )
+void Downloader::resume( Downloader* downloader )
 {
-    QFile file( filename );
-    if( !file.open( QIODevice::WriteOnly ) )
+    if( m_reply == 0 && this == downloader )
     {
-        qDebug() << "Could not open" << qPrintable( filename ) << "for writing" << qPrintable( file.errorString() );
-        return false;
+        QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( m_downloadProgressAtPause ) + '-';
+        m_request->setRawHeader( "Range", rangeHeaderValue );
+
+        doDownload();
     }
-
-    file.write( data->readAll() );
-    file.close();
-
-    return true;
 }
 
-bool Downloader::isHttpRedirect( QNetworkReply* reply )
+void Downloader::pause( Downloader* downloader )
 {
-    int statusCode = reply->attribute( QNetworkRequest::HttpStatusCodeAttribute ).toInt();
-    return statusCode == 301 || statusCode == 302 || statusCode == 303
-           || statusCode == 305 || statusCode == 307 || statusCode == 308;
-}
-
-void Downloader::sslErrors( const QList<QSslError>& sslErrors )
-{
-#if QT_CONFIG( ssl )
-    for( const QSslError &error : sslErrors )
-        fprintf( stderr, "SSL error: %s\n", qPrintable( error.errorString() ) );
-#else
-    Q_UNUSED(sslErrors);
-#endif
-}
-
-void Downloader::downloadFinished( QNetworkReply* reply )
-{
-    QUrl url = reply->url();
-    if( reply->error() )
-        qDebug() << "Download of %s failed:" << url.toEncoded().constData() << qPrintable( reply->errorString() );
-    else
+    if( m_reply != 0 && this == downloader )
     {
-        if( isHttpRedirect( reply ) )
-            qDebug() << "Request was redirected.\n" << stderr;        
-        else
-        {
-            QString filename = saveFileName( url );
-            if( saveToDisk( filename, reply ) )
-                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( filename ) << ')';
-        }
+        qDebug() << "Pause at" << m_downloadProgress << "bytes";
+
+        disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+        disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+        disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+        disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+
+        m_reply->abort();
+        m_file.flush();
+
+        m_downloadProgressAtPause = m_downloadProgress;
+        m_downloadProgress = 0;
+        m_reply = 0;
     }
-
-    reply->deleteLater();
-
-    // download finished
-    qDebug() << "Download finished. Thread ID: " << QThread::currentThreadId();
 }
-
-void Downloader::onProcess( qint64 bytesReceived, qint64 bytesTotal )
-{
-    m_dataList.replace( 1, QString::number( bytesTotal / 1048576 ) + "MB" );
-    m_dataList.replace( 2, QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    m_dataList.replace( 3, QString::number( bytesReceived / 1048576 ) + "MB / " + QString::number( bytesTotal / 1048576 ) + "MB" );
-    Q_EMIT sendProgress();
-}
-
-
-
