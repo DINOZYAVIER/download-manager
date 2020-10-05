@@ -23,8 +23,6 @@ Downloader::Downloader( const QUrl& url, QString path ) :
 
        name += QString::number( i );
     }
-    qDebug() << m_file.fileName();
-    qDebug() << name;
     m_file.setFileName( name );
 
     m_manager = new QNetworkAccessManager( this );
@@ -82,6 +80,8 @@ void Downloader::doDownload()
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
     connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+    qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
+    qDebug() << "File info:" << m_reply->header( QNetworkRequest::ContentDispositionHeader );
 }
 
 bool Downloader::saveToDisk()
@@ -92,12 +92,10 @@ bool Downloader::saveToDisk()
         // already exists, don't overwrite
         QFileInfo info( saveFileName( m_url ) );
         int cnt = 0;
-        qDebug() << info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix();
         while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
         {
             ++cnt;
         }
-        qDebug() << info.baseName() << cnt << info.completeSuffix();
         QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
     }
     else
