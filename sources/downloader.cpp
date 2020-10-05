@@ -32,6 +32,7 @@ Downloader::Downloader( const QUrl& url, QString path ) :
 
     if( !m_file.open( QIODevice::ReadWrite ) )
         qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
+    m_manager->setRedirectPolicy( QNetworkRequest::NoLessSafeRedirectPolicy );
 }
 
 Downloader::~Downloader()
@@ -89,14 +90,18 @@ bool Downloader::saveToDisk()
     if( QFile::exists( name ) )
     {
         // already exists, don't overwrite
-        int i = 0;
-        name += '_' ;
-        while( QFile::exists( name + QString::number( i ) ) )
-            ++i;
-
-       name += QString::number( i );
+        QFileInfo info( saveFileName( m_url ) );
+        int cnt = 0;
+        qDebug() << info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix();
+        while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
+        {
+            ++cnt;
+        }
+        qDebug() << info.baseName() << cnt << info.completeSuffix();
+        QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
     }
-    QFile::rename( m_file.fileName(), name );
+    else
+        QFile::rename( m_file.fileName(), name );
 
     if( m_file.isOpen() )
     {
@@ -131,12 +136,9 @@ void Downloader::onFinished()
     if( m_reply->error() == QNetworkReply::NoError )
     {
         if( isHttpRedirect( m_reply ) )
-            qDebug() << "Request was redirected.\n";
-        else
-        {
-            if( saveToDisk() )
-                qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
-        }
+            qDebug() << "Request was redirected.";
+        if( saveToDisk() )
+            qDebug() << "Download of" << url.toEncoded().constData() << "succeeded ( saved to" << qPrintable( m_file.fileName() ) << ')';
     }
     Q_EMIT finished();
 }
