@@ -27,6 +27,7 @@ void Controller::addDownload( QUrl url )
     connect( downloader, &Downloader::progressChanged, this, &Controller::displayData );
     connect( downloader, &Downloader::finished, this, &Controller::freeResources );
     connect( downloadThread, &QThread::finished, downloader, &Downloader::deleteLater );
+    connect( downloader, &Downloader::errorOccured, this, &Controller::onErrorOccured );
     Q_EMIT downloader->progressChanged( QVariantList() );
     downloadThread->start();
 }
@@ -53,7 +54,6 @@ void Controller::removeItem( int index )
         return;
     releaseItem( m_journal[ index ] );
     m_journal.removeAt( index );
-    // TODO: Remove row from table
 }
 
 void Controller::releaseItem( JournalItem& item )
@@ -107,4 +107,14 @@ void Controller::resume( Downloader* downloader )
 void Controller::pause( Downloader* downloader )
 {
     Q_EMIT pauseSignal( downloader );
+}
+
+void Controller::onErrorOccured()
+{
+    auto* downloader = sender();
+    if( downloader )
+    {
+        int index = findDownloader( downloader );
+        removeDownload( index );
+    }
 }

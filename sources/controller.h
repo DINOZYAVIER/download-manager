@@ -42,6 +42,7 @@ private:
 
     Q_SLOT void displayData( QVariantList data );
     Q_SLOT void freeResources();
+    Q_SLOT void onErrorOccured();
 
 };
 

@@ -122,6 +122,15 @@ void Downloader::onError( QNetworkReply::NetworkError code )
 {
     qDebug() << QString( "Downloading of %1 failed" ).arg( m_url.toString() );
     qDebug() << "Error code:" << code << " Error:" << m_reply->errorString();
+    switch( code )
+    {
+    case QNetworkReply::ProtocolUnknownError:
+        m_reply->disconnect();
+        Q_EMIT errorOccured();
+        break;
+    default:
+        break;
+    }
 }
 
 void Downloader::onSSLError( const QList<QSslError>& sslErrors )

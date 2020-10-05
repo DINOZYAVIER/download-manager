@@ -26,6 +26,7 @@ public:
 Q_SIGNALS:
     void progressChanged( QVariantList data );
     void finished();
+    void errorOccured();
 
 private Q_SLOTS:
     void onProgress( qint64 bytesReceived, qint64 bytesTotal );
