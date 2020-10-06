@@ -80,8 +80,6 @@ void Downloader::doDownload()
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
     connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
-    qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
-    qDebug() << "File info:" << m_reply->header( QNetworkRequest::ContentDispositionHeader );
 }
 
 bool Downloader::saveToDisk()
@@ -151,6 +149,9 @@ void Downloader::onFinished()
 
 void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
+    //qDebug() << "File info:" << m_reply->hasRawHeader( "ContentDispositionHeader" ) << m_reply->header( QNetworkRequest::ContentDispositionHeader );
+    //qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
+    qDebug() << "Headers list:" << m_request->rawHeader( "Content-Disposition" );
     m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
     m_file.write( m_reply->readAll() );
     QVariantList data;
@@ -185,6 +186,7 @@ void Downloader::resume( Downloader* downloader )
 
 void Downloader::pause( Downloader* downloader )
 {
+
     if( m_reply != 0 && this == downloader )
     {
         qDebug() << "Pause at" << m_downloadProgress << "bytes";
