@@ -23,6 +23,7 @@
 #include <QTableView>
 #include <QPainter>
 #include <QMessageBox>
+#include <QElapsedTimer>
 #endif
 
 #endif // PRECOMPILED_H

@@ -78,30 +78,29 @@ void Downloader::doDownload()
 
     connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-    connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    //connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 }
 
 bool Downloader::saveToDisk()
 {
-    QString name = m_downloadDir + saveFileName( m_url );
-    if( QFile::exists( name ) )
-    {
-        // already exists, don't overwrite
-        QFileInfo info( saveFileName( m_url ) );
-        int cnt = 0;
-        while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
-        {
-            ++cnt;
-        }
-        QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
-    }
-    else
-        QFile::rename( m_file.fileName(), name );
-
     if( m_file.isOpen() )
     {
         m_file.close();
+        QString name = m_downloadDir + saveFileName( m_url );
+        if( QFile::exists( name ) )
+        {
+            // already exists, don't overwrite
+            QFileInfo info( saveFileName( m_url ) );
+            int cnt = 0;
+            while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
+            {
+                ++cnt;
+            }
+            QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
+        }
+        else
+            QFile::rename( m_file.fileName(), name );
         return true;
     }
     return false;
@@ -122,7 +121,7 @@ void Downloader::onError( QNetworkReply::NetworkError code )
     {
     case QNetworkReply::ProtocolUnknownError:
         m_reply->disconnect();
-        Q_EMIT errorOccured();
+        Q_EMIT protocolErrorOccured();
         break;
     default:
         break;
@@ -154,8 +153,8 @@ void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
     m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
     m_file.write( m_reply->readAll() );
 
-    //qDebug() << "File info:" << m_reply->hasRawHeader( "ContentDispositionHeader" ) << m_reply->header( QNetworkRequest::ContentDispositionHeader );
-    //qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
+    qDebug() << "File info:" << m_reply->hasRawHeader( "Content-Disposition" ) << m_reply->header( QNetworkRequest::ContentDispositionHeader );
+    ////qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
     //qDebug() << "Headers list:" << m_request->rawHeader( "Content-Disposition" );
 
     QVariantList data;
@@ -197,7 +196,7 @@ void Downloader::pause( Downloader* downloader )
 
         disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
         disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-        disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+        //disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
         disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
         m_reply->abort();

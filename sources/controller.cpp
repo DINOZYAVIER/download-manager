@@ -27,7 +27,7 @@ void Controller::addDownload( QUrl url )
     connect( downloader, &Downloader::progressChanged, this, &Controller::displayData );
     connect( downloader, &Downloader::finished, this, &Controller::freeResources );
     connect( downloadThread, &QThread::finished, downloader, &Downloader::deleteLater );
-    connect( downloader, &Downloader::errorOccured, this, &Controller::onErrorOccured );
+    connect( downloader, &Downloader::protocolErrorOccured, this, &Controller::onErrorOccured );
     Q_EMIT downloader->progressChanged( QVariantList() );
     downloadThread->start();
 }
