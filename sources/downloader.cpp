@@ -149,16 +149,20 @@ void Downloader::onFinished()
 
 void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
+    auto totalDataReceived = bytesReceived + m_downloadProgressAtPause;
+    auto totalData = bytesTotal + m_downloadProgressAtPause;
+    m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
+    m_file.write( m_reply->readAll() );
+
     //qDebug() << "File info:" << m_reply->hasRawHeader( "ContentDispositionHeader" ) << m_reply->header( QNetworkRequest::ContentDispositionHeader );
     //qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
     //qDebug() << "Headers list:" << m_request->rawHeader( "Content-Disposition" );
-    m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
-    m_file.write( m_reply->readAll() );
+
     QVariantList data;
     data.append( m_url.fileName() );
-    data.append( QString::number( ( bytesReceived + m_downloadProgressAtPause ) / 1048576) + '/' + QString::number( ( bytesTotal + m_downloadProgressAtPause ) / 1048576 ) + "MB" );
-    data.append( QString::number( bytesReceived * 1000 / m_elapsedTimer->elapsed() / 1024 ) + "KB/sec" );
-    data.append( ( ( bytesReceived + m_downloadProgressAtPause ) * 100  / ( bytesTotal + m_downloadProgressAtPause ) ) );
+    data.append( QString::number( totalDataReceived / BYTES_IN_MEGABYTES ) + '/' + QString::number( totalData / BYTES_IN_MEGABYTES ) + "MB" );
+    data.append( QString::number( bytesReceived * MILISECONS_IN_SECONDS / m_elapsedTimer->elapsed() / BYTES_IN_KILOBYTES ) + "KB/sec" );
+    data.append( ( ( totalDataReceived ) * 100 / ( totalData ) ) );
     Q_EMIT progressChanged( data );
 }
 

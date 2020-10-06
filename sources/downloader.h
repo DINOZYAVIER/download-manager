@@ -7,6 +7,10 @@
 
 class QElapsedTimer;
 
+const uint BYTES_IN_KILOBYTES = 1000;
+const uint BYTES_IN_MEGABYTES = 1000000;
+const uint MILISECONS_IN_SECONDS = 1000;
+
 class Downloader : public QObject
 {
     Q_OBJECT
