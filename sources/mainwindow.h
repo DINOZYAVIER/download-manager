@@ -29,6 +29,7 @@ private Q_SLOTS:
     void onGetDownloadDir();
     void onAboutClicked();
     void onAboutQtClicked();
+    void onButtonsEnable();
 
 private:
     Ui::MainWindow*      m_ui;

@@ -30,6 +30,8 @@ MainWindow::MainWindow( QWidget* parent )
     connect( m_ui->aAboutQt, &QAction::triggered, this, &MainWindow::onAboutQtClicked );
     connect( m_ui->aClose, &QAction::triggered, this, &MainWindow::close );
 
+    connect( m_ui->downloadTableView, &QTableView::clicked, this, &MainWindow::onButtonsEnable );
+
     m_ui->aResume->setEnabled( false );
     m_ui->aPause->setEnabled( false );
     m_ui->aRemove->setEnabled( false );
@@ -66,9 +68,6 @@ void MainWindow::saveSettings()
 
 void MainWindow::onDownload()
 {
-    m_ui->aResume->setEnabled( true );
-    m_ui->aPause->setEnabled( true );
-    m_ui->aRemove->setEnabled( true );
     QUrl url = QUrl::fromEncoded( m_ui->PathEdit->text().toLocal8Bit() );
     m_controller->addDownload( url );
 }
@@ -95,6 +94,9 @@ void MainWindow::onPause()
 
 void MainWindow::onRemove()
 {
+    m_ui->aResume->setEnabled( false );
+    m_ui->aPause->setEnabled( false );
+    m_ui->aRemove->setEnabled( false );
     auto currentIndex = m_ui->downloadTableView->selectionModel()->currentIndex();
     if( currentIndex.isValid() )
     {
@@ -115,9 +117,6 @@ void MainWindow::onFileOpen()
     while ( !in.atEnd() )
         m_controller->addDownload( in.readLine() );
     file.close();
-    m_ui->aResume->setEnabled( true );
-    m_ui->aPause->setEnabled( true );
-    m_ui->aRemove->setEnabled( true );
 }
 
 void MainWindow::onGetDownloadDir()
@@ -143,3 +142,9 @@ void MainWindow::onAboutQtClicked()
     QMessageBox::aboutQt( this, "About Qt" );
 }
 
+void MainWindow::onButtonsEnable()
+{
+    m_ui->aResume->setEnabled( true );
+    m_ui->aPause->setEnabled( true );
+    m_ui->aRemove->setEnabled( true );
+}

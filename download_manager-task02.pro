@@ -53,7 +53,7 @@ DESTDIR = $$PWD/bin/$${PLATFORM}_$${BUILD_CONFIG}/
 win32 {
     DEPLOY_TARGET = $$shell_quote($$DESTDIR/$${TARGET}.exe)
     DEPLOY_COMMAND = windeployqt --no-compiler-runtime --no-opengl-sw
-    RC_ICONSsdfaf = ./resources/appicon/download_manager.ico
+    RC_ICONS = ./resources/appicon/download_manager.ico
     QMAKE_TARGET_COMPANY = NixSolutions LLC
     QMAKE_TARGET_PRODUCT = Download Manager App
     QMAKE_TARGET_DESCRIPTION = Download Manager App
