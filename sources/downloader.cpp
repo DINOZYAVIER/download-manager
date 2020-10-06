@@ -151,7 +151,7 @@ void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
     //qDebug() << "File info:" << m_reply->hasRawHeader( "ContentDispositionHeader" ) << m_reply->header( QNetworkRequest::ContentDispositionHeader );
     //qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
-    qDebug() << "Headers list:" << m_request->rawHeader( "Content-Disposition" );
+    //qDebug() << "Headers list:" << m_request->rawHeader( "Content-Disposition" );
     m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
     m_file.write( m_reply->readAll() );
     QVariantList data;
