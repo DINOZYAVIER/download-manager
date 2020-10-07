@@ -173,7 +173,10 @@ void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 
     data.append( QString::number( totalDataReceived / BYTES_IN_MEGABYTES ) + '/' + QString::number( totalData / BYTES_IN_MEGABYTES ) + "MB" );
     data.append( QString::number( bytesReceived * MILISECONS_IN_SECONDS / m_elapsedTimer->elapsed() / BYTES_IN_KILOBYTES ) + "KB/sec" );
-    data.append( ( ( totalDataReceived ) * 100 / ( totalData ) ) );
+    if( totalData != 0)
+        data.append( ( ( totalDataReceived ) * 100 / ( totalData ) ) );
+    else
+        data.append( QVariant() );
     Q_EMIT progressChanged( data );
 }
 
