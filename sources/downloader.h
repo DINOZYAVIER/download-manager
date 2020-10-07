@@ -50,7 +50,7 @@ private:
     qint64                 m_downloadProgress;
     qint64                 m_downloadProgressAtPause;
 
-    static QString saveFileName( const QUrl& url );
+    QString saveFileName( const QUrl& url );
 };
 
 #endif // DOWNLOADER_H

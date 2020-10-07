@@ -11,25 +11,9 @@ Downloader::Downloader( const QUrl& url, QString path ) :
     m_downloadProgress( 0 ),
     m_downloadProgressAtPause( 0 )
 {
-    QString name = m_downloadDir + saveFileName( m_url ) + ".part";
-    m_file.setFileName( name );
-    if( QFile::exists( name ) )
-    {
-        // already exists, don't overwrite
-        int i = 0;
-        name += '_' ;
-        while( QFile::exists( name + QString::number( i ) ) )
-            ++i;
-
-       name += QString::number( i );
-    }
-    m_file.setFileName( name );
-
     m_manager = new QNetworkAccessManager( this );
     m_request = new QNetworkRequest( m_url );
 
-    if( !m_file.open( QIODevice::ReadWrite ) )
-        qDebug() << "Could not open" << qPrintable( m_file.fileName() ) << "for writing" << qPrintable( m_file.errorString() );
     m_manager->setRedirectPolicy( QNetworkRequest::NoLessSafeRedirectPolicy );
 }
 
@@ -78,32 +62,40 @@ void Downloader::doDownload()
 
     connect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
     connect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-    //connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    connect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
     connect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 }
 
 bool Downloader::saveToDisk()
 {
-    if( m_file.isOpen() )
+    if( !m_file.isOpen() )
+        return false;
+
+    m_file.close();
+    QString name;
+    if( m_reply->header( QNetworkRequest::ContentDispositionHeader ).isValid() )
+        name = m_downloadDir + m_reply->header( QNetworkRequest::ContentDispositionHeader ).toString().section( '"', 1, 1 );
+    else
+        name = m_downloadDir + saveFileName( m_url );
+
+    if( QFile::exists( name ) )
     {
-        m_file.close();
-        QString name = m_downloadDir + saveFileName( m_url );
-        if( QFile::exists( name ) )
+        // already exists, don't overwrite
+        QFileInfo info( name );
+        int cnt = 0;
+        while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
         {
-            // already exists, don't overwrite
-            QFileInfo info( saveFileName( m_url ) );
-            int cnt = 0;
-            while( QFile::exists( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() ) )
-            {
-                ++cnt;
-            }
-            QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
+            ++cnt;
         }
-        else
-            QFile::rename( m_file.fileName(), name );
-        return true;
+        QFile::rename( m_file.fileName(), m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
+        m_file.setFileName( m_downloadDir + info.baseName() + '_' + QString::number( cnt ) + '.' + info.completeSuffix() );
     }
-    return false;
+    else
+    {
+        QFile::rename( m_file.fileName(), name );
+        m_file.setFileName( name );
+    }
+    return true;
 }
 
 bool Downloader::isHttpRedirect( QNetworkReply* reply )
@@ -148,17 +140,37 @@ void Downloader::onFinished()
 
 void Downloader::onProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
+    QString name;
+    QVariantList data;
+    if( m_reply->header( QNetworkRequest::ContentDispositionHeader ).isValid() )
+        name = m_reply->header( QNetworkRequest::ContentDispositionHeader ).toString().section( '"', 1, 1 );
+    else
+        name = saveFileName( m_url );
+    data.append( name );
+
+    if( !m_file.isOpen() )
+    {
+        name = m_downloadDir + name + ".download";
+        if( QFile::exists( name ) )
+        {
+            // already exists, don't overwrite
+            int i = 0;
+            name += '_' ;
+            while( QFile::exists( name + QString::number( i ) ) )
+                ++i;
+
+           name += QString::number( i );
+        }
+        qDebug() << name;
+        m_file.setFileName( name );
+        m_file.open( QIODevice::ReadWrite );
+    }
+
     auto totalDataReceived = bytesReceived + m_downloadProgressAtPause;
     auto totalData = bytesTotal + m_downloadProgressAtPause;
     m_downloadProgress = m_downloadProgressAtPause + bytesReceived;
     m_file.write( m_reply->readAll() );
 
-    qDebug() << "File info:" << m_reply->hasRawHeader( "Content-Disposition" ) << m_reply->header( QNetworkRequest::ContentDispositionHeader );
-    ////qDebug() << "Headers list:" << m_reply->rawHeaderPairs();
-    //qDebug() << "Headers list:" << m_request->rawHeader( "Content-Disposition" );
-
-    QVariantList data;
-    data.append( m_url.fileName() );
     data.append( QString::number( totalDataReceived / BYTES_IN_MEGABYTES ) + '/' + QString::number( totalData / BYTES_IN_MEGABYTES ) + "MB" );
     data.append( QString::number( bytesReceived * MILISECONS_IN_SECONDS / m_elapsedTimer->elapsed() / BYTES_IN_KILOBYTES ) + "KB/sec" );
     data.append( ( ( totalDataReceived ) * 100 / ( totalData ) ) );
@@ -170,40 +182,38 @@ QString Downloader::saveFileName( const QUrl& url )
     QString path = url.path();
     QString basename = QFileInfo( path ).fileName();
 
-    if( basename.isEmpty() )
-        basename = "download";
-
     return basename;
 }
 
 void Downloader::resume( Downloader* downloader )
 {
-    if( m_reply == 0 && this == downloader )
-    {
-        QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( m_downloadProgressAtPause ) + '-';
-        m_request->setRawHeader( "Range", rangeHeaderValue );
+    if( m_reply != 0 || this != downloader )
+        return;
 
-        doDownload();
-    }
+    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number( m_downloadProgressAtPause ) + '-';
+    m_request->setRawHeader( "Range", rangeHeaderValue );
+
+    doDownload();
+
 }
 
 void Downloader::pause( Downloader* downloader )
 {
 
-    if( m_reply != 0 && this == downloader )
-    {
-        qDebug() << "Pause at" << m_downloadProgress << "bytes";
+    if( m_reply == 0 || this != downloader )
+        return;
 
-        disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
-        disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
-        //disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
-        disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
+    qDebug() << "Pause at" << m_downloadProgress << "bytes";
 
-        m_reply->abort();
-        m_file.flush();
+    disconnect( m_reply, &QNetworkReply::downloadProgress, this, &Downloader::onProgress );
+    disconnect( m_reply, &QNetworkReply::finished, this, &Downloader::onFinished );
+    disconnect( m_reply, &QNetworkReply::errorOccurred, this, &Downloader::onError );
+    disconnect( m_reply, &QNetworkReply::sslErrors, this, &Downloader::onSSLError );
 
-        m_downloadProgressAtPause = m_downloadProgress;
-        m_downloadProgress = 0;
-        m_reply = 0;
-    }
+    m_reply->abort();
+    m_file.flush();
+
+    m_downloadProgressAtPause = m_downloadProgress;
+    m_downloadProgress = 0;
+    m_reply = 0;
 }
